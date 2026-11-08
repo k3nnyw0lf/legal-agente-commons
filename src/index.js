@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Legal Agente Commons: the case organizer's Cloudflare Worker (sign-in, roles, case data, files, search, email in).
 // Built from a private case app with every real case removed. The only case in this repo is made up: src/sample-case.js.
 // Email parser (postal-mime 4.1.4, vendored; see src/vendor/postal-mime-4.1.4/LICENSE.txt).

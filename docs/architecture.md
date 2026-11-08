@@ -1,5 +1,7 @@
 # How the code is laid out
 
+License: the code is `AGPL-3.0-only` (see [LICENSE](../LICENSE)); every project file starts with an SPDX line saying so. Vendored libraries keep their own licenses ([THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)). Before building something new, read [reuse-before-building.md](reuse-before-building.md).
+
 One Cloudflare Worker serves the pages in `public/` and answers the `/api/` calls. There is no build step.
 
 ## Server: `src/`

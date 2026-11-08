@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The fictional sample case must be complete (every link points at a real sample file) and clearly marked as fiction.
 import { test } from "node:test";
 import assert from "node:assert/strict";

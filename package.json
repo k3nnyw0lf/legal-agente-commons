@@ -2,6 +2,7 @@
   "name": "legal-agente-commons",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "description": "Free, open tools that help people in Florida put their legal case in order. Fictional sample data only.",
   "scripts": {
     "test": "node --test \"tests/*.test.mjs\" && node scripts/check-clean.mjs",

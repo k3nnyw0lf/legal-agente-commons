@@ -19,7 +19,8 @@ This is the target. The code in this repo does not do all of it yet. See [What t
 | **Authorized representative** (see below) | What the client allows: the whole case, or only some parts. Everything they do is logged under their own name. | When the client (or the court order or legal document behind it) ends it. |
 | **Notified helper** (offered a task, not yet answered) | A preview with no names: the kind of case, the county, the task, the language, how long it takes, the deadline. No names, no documents. | When they accept or pass. |
 | **Matched helper** (accepted a task) | Only the parts of the case their task needs. A helper asked to review a summons sees the summons, not the whole file. | When the task closes, or the helper leaves. Access stops on its own. |
-| **Supervising lawyer** | The cases in their own program. | When the case leaves their program. |
+| **Health helper** (psychologist, counselor, social worker, doctor, nurse) | Only what their task needs, kept in the case's separate [health compartment](#health-compartment). Not the legal file, unless the task needs a part of it. | When the task closes, or the helper leaves. |
+| **Supervising lawyer** | The cases in their own program. Not the health compartment, unless the person consents (see below). | When the case leaves their program. |
 | **Program lead** | Status only: open, matched, waiting, closed, dates. No documents, no notes. | While they lead the program. |
 | **Ken (founder) and tech staff** | Nothing, as routine. | Not applicable. |
 | **Board, donors, builders** | Never any case data. Builders work only with made-up data like the sample case. | Not applicable. |
@@ -54,6 +55,24 @@ Helpers add notes to a case: typed, or spoken into the phone helper app (see [ro
 - **Every note keeps its author, role and date.** Nobody can change who wrote it or when. An edit is saved as a new version, and the old one stays.
 - **A note stays inside that case's access list.** It is never copied to another case, a helper's own profile, a score, or any report outside the case.
 - **Voice notes are turned into text in the case.** The app already does speech to text with Whisper on Workers AI, which does not keep a copy of the audio (confirm this in the provider's current terms before launch). Whether the recording itself is kept, or only the text, is a decision still to make.
+
+## Health compartment
+
+Some helpers are health professionals: psychologists, counselors, social workers, doctors and nurses. They get the **health helper** role.
+
+- **License checked before the first match,** through the state's public license search (in Florida, the Department of Health). Until then they see no previews.
+- **Health and therapy notes live in a separate compartment of the case,** never in the legal file. A health note moves into the legal file only if **the person consents in writing and the supervising lawyer agrees.** Both are recorded in the case.
+- **Health helpers see only what their task needs.**
+- **Lawyers do not see the health compartment by default.** Nor do other helpers, the program lead, or tech staff.
+- The health compartment follows every other rule here: one access list, checked on the server, every view logged and shown to the person.
+
+## Crisis note on every helper screen
+
+Every helper's screen shows, at all times:
+
+> **In an emergency, call 911. In a mental-health or suicide crisis, call or text 988.**
+
+The same note shows in Spanish when the screen is in Spanish (**En una emergencia, llame al 911. En una crisis de salud mental o de suicidio, llame o envíe un mensaje de texto al 988.**).
 
 ## Languages inside a case
 
@@ -91,7 +110,7 @@ Be honest about the gap. Today's code came from a one-person app, so:
 - Invited people (role `counsel`) open only the case codes on their invite. That part is close to a per-case list.
 - A "lawyer view" code shows the same case without some tabs. That is a view, not an access list.
 - The access log exists (D1 table `access_log`), but only admins can read it. The client cannot see it yet.
-- There is no authorized-representative role, no notified-helper preview, no task, no automatic end of access.
+- There is no authorized-representative or health-helper role, no health compartment, no notified-helper preview, no task, no automatic end of access.
 - Preferences (reading aid, read-aloud speed, online-voice answer, theme) are kept in each browser's local storage, not on the account.
 - Case codes are a second key on top of sign-in. They are not a replacement for an access list.
 
@@ -109,6 +128,7 @@ Details for each item are in [roadmap.md](roadmap.md).
 8. [Phone helper app](roadmap.md#8-phone-helper-app)
 9. [Preferences that follow the person](roadmap.md#9-preferences-that-follow-the-person)
 10. [Languages](roadmap.md#10-languages)
+11. [Health helpers and the health compartment](roadmap.md#11-health-helpers-and-the-health-compartment)
 
 Also needed before real cases: an outside security review, and a lawyer's review of every AI feature against the "never gives legal advice" rule (see [AI features](../README.md#ai-features)).
 
@@ -119,3 +139,4 @@ These need a Florida lawyer's answer before real cases. Nothing here is decided.
 1. **Helpers' voice notes:** are they protected as work product when a helper makes them under the supervising lawyer's direction? Does the answer change for a non-lawyer helper (student, paralegal, peer guide), or if the recording is kept instead of only the text?
 2. **Consent when someone else brings a case:** what record of the person's consent is enough, and what proof should the program ask of a guardian or an agent under a power of attorney?
 3. **Safe-harbor wording** for security researchers in [SECURITY.md](../SECURITY.md): is it right for a Florida nonprofit?
+4. **Health compartment:** which health-privacy rules apply to notes that health helpers make in this program, and what must the person's written consent say before a health note moves into the legal file?

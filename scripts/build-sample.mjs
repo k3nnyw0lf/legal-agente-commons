@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Builds the FICTIONAL sample case documents: public/cf/sample-debt-ortega/*.pdf and _text.json.
 // Run: node scripts/build-sample.mjs   (no install needed; uses the vendored pdf-lib in public/vendor)
 // Every name, number and date is made up. Do not put real case material here.

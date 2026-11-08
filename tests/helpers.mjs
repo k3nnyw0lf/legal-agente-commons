@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // In-memory stand-ins for the Cloudflare bindings, so the real worker runs in Node with no network and no deploy.
 import fs from "node:fs";
 import path from "node:path";

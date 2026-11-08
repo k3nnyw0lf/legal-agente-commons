@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /* app-plus: Web graph, search inside documents, exhibit binder with Bates + redaction, audio player, viewer, proof map,
    requests, fingerprints, email in, citation checks, search by meaning, read aloud, talk, Spanish.
    Libraries are vendored under /vendor (same origin, behind sign-in). */

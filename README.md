@@ -72,7 +72,12 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) first. Found a security problem? Read [S
 
 Legal Agente is not a law firm and does not give legal advice.
 
-**License:** to be decided. See [LICENSE](LICENSE). Libraries in `vendor/` folders keep their own licenses; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+## License
+
+- **Code:** [GNU Affero General Public License v3.0](LICENSE) (`AGPL-3.0-only`). If you run a changed version of this app for other people over a network, you must offer them its source code.
+- **Guides and other writing:** license still to be decided (likely Creative Commons).
+- **Libraries** in `vendor/` folders keep their own licenses and notices; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+- Counsel will confirm these choices before the project is published.
 
 ---
 
@@ -100,4 +105,4 @@ Herramientas abiertas y gratis para que la gente en Florida ponga su caso legal 
 
 Legal Agente no es un bufete de abogados y no da consejo legal.
 
-**Licencia:** por decidir.
+**Licencia:** el código usa la licencia GNU AGPL v3.0 ([LICENSE](LICENSE)). Las guías y otros textos tendrán una licencia por decidir (probablemente Creative Commons). Un abogado confirmará estas decisiones antes de publicar.

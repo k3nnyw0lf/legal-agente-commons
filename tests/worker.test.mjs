@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Runs the real worker (src/index.js) against in-memory bindings: sign-in, roles, case codes, files, AI rules, fingerprints.
 import { test } from "node:test";
 import assert from "node:assert/strict";

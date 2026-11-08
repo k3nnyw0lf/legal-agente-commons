@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // ============================================================================
 //  FICTIONAL SAMPLE CASE. NOT A REAL CASE.
 //  Every person, company, court, number, date and document below is made up

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Legal Agente — reading aid (dyslexia-friendly fonts, spacing, size).
    One button ("Aa"). Choices are saved in this browser and shared by the home page and the app.
    Fonts load only when picked: OpenDyslexic (@fontsource, SIL OFL) and Lexend (Google Fonts, OFL). */

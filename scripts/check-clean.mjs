@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Looks for things that must never be in this repo: real email addresses, account and namespace ids,
 // Drive file ids, case email-in addresses, keys and tokens, phone numbers outside the 555-01xx fiction range.
 // Optional: LA_DENYLIST=<path to a file OUTSIDE this repo, one term per line> also fails on any of those terms.

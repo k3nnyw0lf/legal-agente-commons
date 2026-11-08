@@ -1,6 +1,6 @@
 # Third-party libraries
 
-These libraries are copied into the repo at a fixed version. Each keeps its own license.
+This project's own code is licensed under the GNU Affero General Public License v3.0 only (`AGPL-3.0-only`, see [LICENSE](LICENSE)); counsel will confirm. The libraries below are copied into the repo at a fixed version. **Each keeps its own license file and notice** (MIT, MIT-0, BSD, MPL, Apache), and none of them is relicensed by this project. Projects we may reuse later are listed in [docs/reuse-before-building.md](docs/reuse-before-building.md); when one is added, its license file and notice go next to it and a row goes here.
 
 | Library | Version | Where | License | Notes |
 |---|---|---|---|---|

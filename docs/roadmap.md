@@ -31,7 +31,7 @@ A trained student or staff member checks the file. The program checks for confli
 ## 4. Helper profile and checks
 
 - **One profile per helper,** with as many case types, skills, languages and counties as they have. Matching uses all of them.
-- **Checked before the first match:** identity, and any license they list (lawyers through the Florida Bar's public member search, notaries through their commission).
+- **Checked before the first match:** identity, and any license they list (lawyers through the Florida Bar's public member search, notaries through their commission, health professionals through the Department of Health's license search).
 - Skills can be edited at any time. A helper can leave at any time; their open tasks go back to the program.
 
 ## 5. Offers, notifications and matching
@@ -63,6 +63,7 @@ So helpers can give spare minutes to cases instead of scrolling social media.
 - **Voice notes:** hold to talk, and the note is turned into text in the case. The app already does speech to text with Whisper on Workers AI, which does not keep a copy of the audio. Notes follow the [helper notes rules](access-model.md#helper-notes): case team first, client only after the supervising lawyer approves a non-lawyer's note.
 - Starts as a **phone web app** that people install from the browser, not an app-store app.
 - Keeps read aloud, the dyslexia-friendly fonts, and English and Spanish, and uses each helper's saved [preferences](#9-preferences-that-follow-the-person).
+- Shows the [crisis note](access-model.md#crisis-note-on-every-helper-screen) on every screen: call 911, or call or text 988.
 
 ## 9. Preferences that follow the person
 
@@ -90,8 +91,20 @@ English and Spanish ship first. More languages are added as volunteers who speak
 - AI first-draft translations are allowed, but they are marked **unreviewed** until a volunteer who speaks the language checks them.
 - The case file keeps the **person's original words plus an English version** for the lawyer (see [access-model.md, languages inside a case](access-model.md#languages-inside-a-case)).
 
+## 11. Health helpers and the health compartment
+
+Some helpers are psychologists, counselors, social workers, doctors or nurses.
+
+- A **health helper** role, with the license checked before the first match (in Florida, the Department of Health's public license search).
+- A separate **health compartment** in each case for health and therapy notes. A note moves into the legal file only with the person's written consent and the supervising lawyer's agreement. Lawyers do not see the compartment by default.
+- Health helpers see only what their task needs.
+- **Every helper's screen shows a crisis note:** in an emergency, call 911; in a mental-health or suicide crisis, call or text 988 (in Spanish too).
+
+Rules: [access-model.md, health compartment](access-model.md#health-compartment).
+
 ## Before any real case
 
 - An outside security review.
+- License notices in the app (AGPL-3.0): a "Source code" link for everyone who uses a running copy, and a short notice with the copyright, "no warranty", and a link to the license. Counsel confirms the license choice.
 - A lawyer's review of every AI feature against the "never gives legal advice" rule.
 - Answers to the [open questions for counsel](access-model.md#open-questions-for-counsel).
