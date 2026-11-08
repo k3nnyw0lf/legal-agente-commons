@@ -53,11 +53,13 @@ To run the app itself you need Cloudflare's `wrangler` and your own Cloudflare a
 
 - Plain-language guides in English and Spanish (debt collection first)
 - Design of a simple, phone-friendly intake form
-- Reading help for people with dyslexia
-- Spanish translation
+- A phone helper app, so helpers can give spare minutes to cases
+- Reading help for people with dyslexia, and an accessibility check (WCAG 2.2 AA)
+- Translation: Spanish first, then Haitian Creole, Portuguese and any language you speak
 - Privacy and security review
-- The pieces still to build in [docs/access-model.md](docs/access-model.md#still-to-build)
 - Licensed Florida lawyers: review the guides before they go out
+
+You do not need to code. Starter tasks: [docs/starter-issues.md](docs/starter-issues.md). Everything still to build: [docs/roadmap.md](docs/roadmap.md).
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) first. Found a security problem? Read [SECURITY.md](SECURITY.md) and report it privately.
 
@@ -90,7 +92,7 @@ Herramientas abiertas y gratis para que la gente en Florida ponga su caso legal 
 
 **Quién ve un caso:** solo las personas que están en el caso. Vea [docs/access-model.md](docs/access-model.md) (en inglés).
 
-**Cómo puede ayudar hoy:** guías sencillas en inglés y español, el diseño de un formulario fácil para el teléfono, ayuda de lectura para personas con dislexia, traducción, y revisión de privacidad y seguridad. Los abogados con licencia en Florida pueden revisar las guías antes de publicarlas.
+**Cómo puede ayudar hoy:** guías sencillas en inglés y español, el diseño de un formulario fácil para el teléfono, una aplicación de teléfono para que los voluntarios ayuden en sus minutos libres, ayuda de lectura para personas con dislexia, revisión de accesibilidad, traducción (español primero, luego criollo haitiano, portugués y cualquier idioma que usted hable), y revisión de privacidad y seguridad. No hace falta programar. Los abogados con licencia en Florida pueden revisar las guías antes de publicarlas. Tareas para empezar: [docs/starter-issues.md](docs/starter-issues.md) (en inglés).
 
 **Reglas:** nunca publique detalles, nombres ni documentos de un caso real. Nada de consejo legal aquí. Todos son bienvenidos, sin importar quiénes sean ni lo que crean. Sea amable. Las ideas son bienvenidas: abra un "issue" y cuéntenos.
 

@@ -1,0 +1,17 @@
+# security.txt for Legal Agente Commons (RFC 9116) - TEMPLATE, NOT LIVE
+#
+# Before publishing:
+#   1. Replace every <...> below with the real public values (the repo address chosen by Ken).
+#   2. Set Expires to a date less than one year ahead, and renew it before then.
+#   3. Save it as public/.well-known/security.txt and add "/.well-known/security.txt"
+#      to the public paths (__PUBLIC) in src/index.js, so it opens without sign-in.
+#
+# Reports go to GitHub's private vulnerability reporting. Test only on your own demo copy
+# with made-up data, never a live deployment. No cash rewards; we thank reporters by name.
+
+Contact: https://github.com/<OWNER>/<REPO>/security/advisories/new
+Expires: <YYYY-MM-DDT00:00:00.000Z>
+Policy: https://github.com/<OWNER>/<REPO>/blob/main/SECURITY.md
+Acknowledgments: https://github.com/<OWNER>/<REPO>/blob/main/SECURITY.md#thank-you-list
+Preferred-Languages: en, es
+Canonical: https://<PUBLIC-ADDRESS>/.well-known/security.txt
