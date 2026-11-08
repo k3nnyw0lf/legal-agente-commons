@@ -1,0 +1,12 @@
+{
+  "name": "legal-agente-commons",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Free, open tools that help people in Florida put their legal case in order. Fictional sample data only.",
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\" && node scripts/check-clean.mjs",
+    "check": "node scripts/check-clean.mjs",
+    "build:sample": "node scripts/build-sample.mjs"
+  },
+  "engines": { "node": ">=22" }
+}

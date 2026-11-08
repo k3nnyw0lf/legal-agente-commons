@@ -1,0 +1,7 @@
+License: to be decided by Ken.
+
+No license has been chosen for the project's own code and text yet. Until one is
+chosen and added here, all rights are reserved by the authors.
+
+Third-party libraries in src/vendor/ and public/vendor/ keep their own licenses.
+See THIRD_PARTY_NOTICES.md.

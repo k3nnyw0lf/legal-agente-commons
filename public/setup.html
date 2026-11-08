@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create your login — Legal Agente</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23111'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' text-anchor='middle' fill='%23ece8df'%3ELA%3C/text%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem('la-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('la-lang');if(l==='es'||l==='en'){document.documentElement.setAttribute('data-lang',l);document.documentElement.lang=l;}}catch(e){}</script>
+<link rel="stylesheet" href="/la.css">
+</head>
+<body>
+<a class="skip" href="#main"><span lang="en">Skip to main content</span><span lang="es">Ir al contenido</span></a>
+<nav class="nav">
+  <a class="logo" href="/">Legal Agente</a>
+  <button type="button" class="theme" id="themeBtn"></button>
+  <div class="lang" role="group" aria-label="Language / Idioma"><button type="button" data-set="en" aria-pressed="true">EN</button><button type="button" data-set="es" aria-pressed="false">ES</button></div>
+</nav>
+<main id="main" class="split">
+  <div>
+    <div class="mono" id="kicker"><span lang="en">Admin login</span><span lang="es">Acceso de administrador</span></div>
+    <h1 style="margin-top:.6rem"><span lang="en">Create your <em>login.</em></span><span lang="es">Crea tu <em>acceso.</em></span></h1>
+    <p class="lede"><span lang="en">Pick the password you will use from now on. Only you see it: it is stored scrambled, and nobody else, not even the people who run the site, can read it.</span><span lang="es">Elige la contraseña que usarás desde ahora. Solo tú la ves: se guarda cifrada y nadie más, ni siquiera quienes manejan el sitio, puede leerla.</span></p>
+    <div class="steps">
+      <div><b>01</b><span><span lang="en">Your email is your username.</span><span lang="es">Tu correo es tu usuario.</span></span></div>
+      <div><b>02</b><span><span lang="en">Type one of your case codes to prove it's you.</span><span lang="es">Escribe uno de tus códigos de caso para probar que eres tú.</span></span></div>
+      <div><b>03</b><span><span lang="en">This page closes as soon as you save, or when the timer ends.</span><span lang="es">Esta página se cierra en cuanto guardes, o cuando acabe el tiempo.</span></span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="closed" class="closed hide">
+      <h2><span lang="en">Closed right now</span><span lang="es">Cerrado ahora</span></h2>
+      <p style="margin-top:.8rem"><span lang="en">Creating or resetting a login is only open for a short time, when an admin opens it. If you already have a login, sign in.</span><span lang="es">Crear o cambiar un acceso solo se abre por poco tiempo, cuando un administrador lo abre. Si ya tienes acceso, entra.</span></p>
+      <p class="links"><a href="/login">→ <span lang="en">Sign in</span><span lang="es">Entrar</span></a> · <a href="/"><span lang="en">Home</span><span lang="es">Inicio</span></a></p>
+    </div>
+    <form id="inv" class="hide" novalidate>
+      <h2><span lang="en">You're invited</span><span lang="es">Estás invitado</span></h2>
+      <p class="timer mono" id="invnote"></p>
+      <label for="iemail"><span lang="en">Your email (your username)</span><span lang="es">Tu correo (tu usuario)</span></label>
+      <input id="iemail" name="username" type="email" autocomplete="username" readonly>
+      <label for="ipw"><span lang="en">Choose a password</span><span lang="es">Elige una contraseña</span> <small><span lang="en">10+ characters</span><span lang="es">10 o más caracteres</span></small></label>
+      <div class="field"><input id="ipw" name="new-password" type="password" autocomplete="new-password" minlength="10" required><button type="button" class="show" data-for="ipw"><span lang="en">Show</span><span lang="es">Ver</span></button></div>
+      <label for="ipw2"><span lang="en">Type it again</span><span lang="es">Escríbela otra vez</span></label>
+      <div class="field"><input id="ipw2" type="password" autocomplete="new-password" required><button type="button" class="show" data-for="ipw2"><span lang="en">Show</span><span lang="es">Ver</span></button></div>
+      <button class="btn" id="igo" type="submit"><span lang="en">Save and open the case</span><span lang="es">Guardar y abrir el caso</span> →</button>
+      <div class="msg" id="imsg" role="alert" aria-live="polite"></div>
+    </form>
+    <form id="f" class="hide" novalidate>
+      <h2><span lang="en">New login</span><span lang="es">Nuevo acceso</span></h2>
+      <div class="timer mono" id="timer"></div>
+      <label for="email"><span lang="en">Email</span><span lang="es">Correo</span></label>
+      <input id="email" name="username" type="email" autocomplete="username" inputmode="email" required>
+      <label for="code"><span lang="en">One of your case codes</span><span lang="es">Uno de tus códigos de caso</span></label>
+      <input id="code" name="code" type="password" inputmode="numeric" autocomplete="off" required>
+      <label for="pw"><span lang="en">New password</span><span lang="es">Contraseña nueva</span> <small><span lang="en">10+ characters</span><span lang="es">10 o más caracteres</span></small></label>
+      <div class="field"><input id="pw" name="new-password" type="password" autocomplete="new-password" minlength="10" required><button type="button" class="show" data-for="pw"><span lang="en">Show</span><span lang="es">Ver</span></button></div>
+      <div class="meter"><i id="bar"></i></div>
+      <label for="pw2"><span lang="en">Type it again</span><span lang="es">Escríbela otra vez</span></label>
+      <div class="field"><input id="pw2" type="password" autocomplete="new-password" required><button type="button" class="show" data-for="pw2"><span lang="en">Show</span><span lang="es">Ver</span></button></div>
+      <button class="btn" id="go" type="submit"><span lang="en">Save and sign in</span><span lang="es">Guardar y entrar</span> →</button>
+      <div class="msg" id="msg" role="alert" aria-live="polite"></div>
+    </form>
+  </div>
+</main>
+<script>
+(function(){
+  var root=document.documentElement,btns=document.querySelectorAll('.lang button');
+  function L(){return root.getAttribute('data-lang')==='es';}
+  function setLang(l){root.setAttribute('data-lang',l);root.lang=l;btns.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.set===l));});try{localStorage.setItem('la-lang',l);}catch(e){}paintTheme();tick();}
+  btns.forEach(function(b){b.addEventListener('click',function(){setLang(b.dataset.set);});});
+  var tb=document.getElementById('themeBtn');
+  function isDark(){var t=root.getAttribute('data-theme');return t?t==='dark':!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);}
+  function paintTheme(){var d=isDark();tb.textContent=d?'☀':'☾';var x=L()?(d?'Cambiar a diseño claro':'Cambiar a diseño oscuro'):(d?'Switch to light design':'Switch to dark design');tb.setAttribute('aria-label',x);tb.title=x;}
+  tb.addEventListener('click',function(){var n=isDark()?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('la-theme',n);}catch(e){}paintTheme();});
+  document.querySelectorAll('.show').forEach(function(s){s.addEventListener('click',function(){var i=document.getElementById(s.dataset.for);i.type=i.type==='password'?'text':'password';});});
+
+  var until=0, f=document.getElementById('f'), closed=document.getElementById('closed'), timer=document.getElementById('timer'), msg=document.getElementById('msg'), go=document.getElementById('go');
+  function show(open){f.classList.toggle('hide',!open);closed.classList.toggle('hide',open);}
+  function tick(){
+    if(!until)return;var s=Math.max(0,Math.round((until-Date.now())/1000));
+    if(s<=0){show(false);return;}
+    var m=Math.floor(s/60),r=('0'+(s%60)).slice(-2);
+    timer.textContent=(L()?'Abierto · se cierra en ':'Open · closes in ')+m+':'+r;
+  }
+  setInterval(tick,1000);
+  var saved=null;try{saved=localStorage.getItem('la-lang');}catch(e){}
+  setLang(saved==='es'||saved==='en'?saved:((navigator.language||'en').toLowerCase().indexOf('es')===0?'es':'en'));
+  var invite=(new URLSearchParams(location.search).get('invite')||'').replace(/[^a-f0-9]/g,'');
+  var inv=document.getElementById('inv');
+  if(invite){
+    document.getElementById('kicker').innerHTML='<span lang="en">Invitation</span><span lang="es">Invitación</span>';
+    document.querySelector('.steps').classList.add('hide');
+    fetch('/api/auth/invite?token='+invite,{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+      if(!j.ok){closed.classList.remove('hide');closed.querySelector('h2').innerHTML='<span lang="en">This link has expired</span><span lang="es">Este enlace ya venció</span>';return;}
+      inv.classList.remove('hide');document.getElementById('iemail').value=j.email;
+      var d=new Date(j.expires);document.getElementById('invnote').textContent=(L()?'Válido hasta ':'Valid until ')+d.toLocaleDateString(L()?'es-US':'en-US',{month:'short',day:'numeric'});
+    }).catch(function(){closed.classList.remove('hide');});
+  } else {
+  fetch('/api/auth/status',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+    if(j.setupOpen){until=j.setupUntil;show(true);tick();}else show(false);
+  }).catch(function(){show(false);});
+  }
+  inv.addEventListener('submit',function(e){
+    e.preventDefault();var im=document.getElementById('imsg'),k=L()?'es':'en',a=inv.ipw.value,b=inv.ipw2.value,g=document.getElementById('igo');im.textContent='';
+    if(!a||!b){im.textContent=E[k].fill;return;} if(a.length<10){im.textContent=E[k].short;return;} if(a!==b){im.textContent=E[k].match;return;}
+    g.disabled=true;
+    fetch('/api/auth/setup',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Invite':'1'},body:JSON.stringify({invite:invite,password:a})})
+      .then(function(r){return r.json();}).then(function(j){if(j.ok){location.replace(j.next||'/app');return;}im.textContent=L()&&ES[j.error]?ES[j.error]:(j.error||'Error');g.disabled=false;})
+      .catch(function(){im.textContent=E[k].net;g.disabled=false;});
+  });
+
+  var bar=document.getElementById('bar');
+  f.pw.addEventListener('input',function(){var v=f.pw.value,sc=0;if(v.length>=10)sc++;if(v.length>=14)sc++;if(/[A-Z]/.test(v)&&/[a-z]/.test(v))sc++;if(/\d/.test(v))sc++;if(/[^A-Za-z0-9]/.test(v))sc++;
+    bar.style.width=(sc*20)+'%';bar.style.background=sc>=4?'var(--ok)':(sc>=2?'#f47738':'var(--error)');});
+  var E={en:{short:'Use at least 10 characters.',match:'The two passwords are not the same.',fill:'Fill in every box.',net:'Could not reach the server. Try again.'},
+         es:{short:'Usa al menos 10 caracteres.',match:'Las dos contraseñas no son iguales.',fill:'Llena todas las casillas.',net:'No se pudo conectar. Inténtalo de nuevo.'}};
+  var ES={'This invite link is not valid or has expired.':'Este enlace de invitación no es válido o ya venció.','Creating a login is closed right now.':'Crear un acceso está cerrado ahora.','That email or case code is not right.':'Ese correo o código de caso no es correcto.','Use at least 10 characters.':'Usa al menos 10 caracteres.','Too many tries. Wait 15 minutes and try again.':'Demasiados intentos. Espera 15 minutos y vuelve a intentar.'};
+  f.addEventListener('submit',function(e){
+    e.preventDefault();msg.textContent='';var k=L()?'es':'en';
+    var em=f.email.value.trim(),code=f.code.value.trim(),pw=f.pw.value,pw2=f.pw2.value;
+    if(!em||!code||!pw||!pw2){msg.textContent=E[k].fill;return;}
+    if(pw.length<10){msg.textContent=E[k].short;return;}
+    if(pw!==pw2){msg.textContent=E[k].match;return;}
+    go.disabled=true;
+    fetch('/api/auth/setup',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,code:code,password:pw})})
+      .then(function(r){return r.json();}).then(function(j){
+        if(j.ok){location.replace(j.next||'/app');return;}
+        msg.textContent=L()&&ES[j.error]?ES[j.error]:(j.error||'Error');go.disabled=false;
+      }).catch(function(){msg.textContent=E[k].net;go.disabled=false;});
+  });
+})();
+</script>
+<script src="/read-aid.js" defer></script>
+</body>
+</html>

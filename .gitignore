@@ -1,0 +1,19 @@
+# Real deployment settings and secrets never go in git.
+wrangler.toml
+.dev.vars
+.env
+.env.*
+.wrangler/
+node_modules/
+
+# Synced-folder and OS clutter
+desktop.ini
+Thumbs.db
+.DS_Store
+*.bak-*
+
+# Real case material must never be added. Only the fictional sample lives under public/cf/.
+public/cf/*
+!public/cf/sample-debt-ortega/
+cases/
+backups/

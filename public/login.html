@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in — Legal Agente</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23111'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' text-anchor='middle' fill='%23ece8df'%3ELA%3C/text%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem('la-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('la-lang');if(l==='es'||l==='en'){document.documentElement.setAttribute('data-lang',l);document.documentElement.lang=l;}}catch(e){}</script>
+<link rel="stylesheet" href="/la.css">
+</head>
+<body>
+<a class="skip" href="#main"><span lang="en">Skip to main content</span><span lang="es">Ir al contenido</span></a>
+<nav class="nav">
+  <a class="logo" href="/">Legal Agente</a>
+  <button type="button" class="theme" id="themeBtn"></button>
+  <div class="lang" role="group" aria-label="Language / Idioma"><button type="button" data-set="en" aria-pressed="true">EN</button><button type="button" data-set="es" aria-pressed="false">ES</button></div>
+</nav>
+<main id="main" class="split">
+  <div>
+    <div class="mono"><span lang="en">Private case files</span><span lang="es">Expedientes privados</span></div>
+    <h1 style="margin-top:.6rem"><span lang="en">Welcome <em>back.</em></span><span lang="es">Bienvenido <em>de nuevo.</em></span></h1>
+    <p class="lede"><span lang="en">Sign in to open your case files. Each case still asks for its own code.</span><span lang="es">Entra para abrir tus expedientes. Cada caso sigue pidiendo su propio código.</span></p>
+  </div>
+  <form class="card" id="f" novalidate>
+    <h2><span lang="en">Sign in</span><span lang="es">Entrar</span></h2>
+    <label for="email"><span lang="en">Email</span><span lang="es">Correo</span></label>
+    <input id="email" name="username" type="email" autocomplete="username" inputmode="email" required>
+    <label for="pw"><span lang="en">Password</span><span lang="es">Contraseña</span></label>
+    <div class="field"><input id="pw" name="password" type="password" autocomplete="current-password" required><button type="button" class="show" data-for="pw"><span lang="en">Show</span><span lang="es">Ver</span></button></div>
+    <div id="tf" class="hide"><label for="totp"><span lang="en">6-digit code from your authenticator app</span><span lang="es">Código de 6 dígitos de tu app autenticadora</span></label>
+    <input id="totp" name="one-time-code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456"><div class="note" style="color:var(--soft);font-size:.85rem;margin-top:.35rem"><span lang="en">Lost your phone? Use one of your backup codes.</span><span lang="es">¿Perdiste el teléfono? Usa uno de tus códigos de respaldo.</span></div></div>
+    <button class="btn" id="go" type="submit"><span lang="en">Sign in</span><span lang="es">Entrar</span> →</button>
+    <div class="msg" id="msg" role="alert" aria-live="polite"></div>
+    <div id="pkbox" class="hide" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line)">
+      <button class="btn secondary" id="pkgo" type="button"><span lang="en">Sign in with a passkey</span><span lang="es">Entrar con una llave de acceso</span></button>
+      <div class="note" style="color:var(--soft);font-size:.85rem;margin-top:.35rem"><span lang="en">Your face, fingerprint or phone PIN, instead of the password and the 6-digit code. Add one on the Security page after you sign in.</span><span lang="es">Tu cara, tu huella o el PIN del teléfono, en vez de la contraseña y el código de 6 dígitos. Agrégala en la página de Seguridad después de entrar.</span></div>
+    </div>
+    <div class="links">
+      <a href="/">← <span lang="en">Home</span><span lang="es">Inicio</span></a>
+      <a href="/setup" id="setupLink" class="hide"><span lang="en">Create your login</span><span lang="es">Crear tu acceso</span></a>
+    </div>
+  </form>
+</main>
+<script>
+(function(){
+  var root=document.documentElement,btns=document.querySelectorAll('.lang button');
+  function L(){return root.getAttribute('data-lang')==='es';}
+  function setLang(l){root.setAttribute('data-lang',l);root.lang=l;btns.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.set===l));});try{localStorage.setItem('la-lang',l);}catch(e){}paintTheme();}
+  btns.forEach(function(b){b.addEventListener('click',function(){setLang(b.dataset.set);});});
+  var tb=document.getElementById('themeBtn');
+  function isDark(){var t=root.getAttribute('data-theme');return t?t==='dark':!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);}
+  function paintTheme(){var d=isDark();tb.textContent=d?'☀':'☾';var x=L()?(d?'Cambiar a diseño claro':'Cambiar a diseño oscuro'):(d?'Switch to light design':'Switch to dark design');tb.setAttribute('aria-label',x);tb.title=x;}
+  tb.addEventListener('click',function(){var n=isDark()?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('la-theme',n);}catch(e){}paintTheme();});
+  var saved=null;try{saved=localStorage.getItem('la-lang');}catch(e){}
+  setLang(saved==='es'||saved==='en'?saved:((navigator.language||'en').toLowerCase().indexOf('es')===0?'es':'en'));
+  document.querySelectorAll('.show').forEach(function(s){s.addEventListener('click',function(){var i=document.getElementById(s.dataset.for);i.type=i.type==='password'?'text':'password';});});
+  fetch('/api/auth/status',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){if(j.signedIn)location.replace(next());if(j.setupOpen)document.getElementById('setupLink').classList.remove('hide');}).catch(function(){});
+  function next(){var n=new URLSearchParams(location.search).get('next')||'/app';return (n.charAt(0)==='/'&&n.charAt(1)!=='/'&&n.charAt(1)!=='\\')?n:'/app';}
+  var f=document.getElementById('f'),msg=document.getElementById('msg'),go=document.getElementById('go');
+  var E={en:{empty:'Enter your email and password.',net:'Could not reach the server. Try again.'},es:{empty:'Escribe tu correo y contraseña.',net:'No se pudo conectar. Inténtalo de nuevo.'}};
+  var ES={'Wrong email or password.':'Correo o contraseña incorrectos.','Too many tries. Wait 15 minutes and try again.':'Demasiados intentos. Espera 15 minutos y vuelve a intentar.'};
+  // Passkeys (only on a secure address, only where the browser supports them; the server checks the site name)
+  var pkb=document.getElementById('pkgo');
+  if(window.PublicKeyCredential&&window.isSecureContext){document.getElementById('pkbox').classList.remove('hide');}
+  var PKES={'That took too long. Try again.':'Tardó demasiado. Inténtalo de nuevo.','The passkey could not be checked. Try again.':'No se pudo comprobar la llave. Inténtalo de nuevo.','This passkey is not set up for Legal Agente. Sign in with your password, then add it on the Security page.':'Esta llave no está registrada en Legal Agente. Entra con tu contraseña y agrégala en la página de Seguridad.','Too many tries. Wait 15 minutes and try again.':'Demasiados intentos. Espera 15 minutos y vuelve a intentar.'};
+  pkb.addEventListener('click',function(){
+    msg.textContent='';pkb.disabled=true;
+    var load=window.SimpleWebAuthnBrowser?Promise.resolve():new Promise(function(res,rej){var s=document.createElement('script');s.src='/vendor/simplewebauthn-browser-14.0.0/index.umd.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+    var id=null;
+    load.then(function(){return fetch('/api/auth/passkey-options',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{}'});}).then(function(r){return r.json();})
+      .then(function(j){if(!j.ok)throw new Error(j.error||'Error');id=j.id;return SimpleWebAuthnBrowser.startAuthentication({optionsJSON:j.options});})
+      .then(function(resp){return fetch('/api/auth/passkey-login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,response:resp,next:next()})});}).then(function(r){return r.json();})
+      .then(function(j){if(j.ok){location.replace(j.next||next());return;}throw new Error(j.error||'Error');})
+      .catch(function(err){var m=String((err&&err.message)||err);if(/NotAllowed|cancel|abort|timed out/i.test((err&&err.name)||'')||/not allowed|cancel/i.test(m))m=L()?'Se canceló. Puedes intentarlo de nuevo o usar tu contraseña.':'Cancelled. Try again, or use your password.';else if(L()&&PKES[m])m=PKES[m];msg.textContent=m;pkb.disabled=false;});
+  });
+  f.addEventListener('submit',function(e){
+    e.preventDefault();msg.textContent='';
+    var em=f.email.value.trim(),pw=f.pw.value;
+    if(!em||!pw){msg.textContent=E[L()?'es':'en'].empty;return;}
+    go.disabled=true;
+    fetch('/api/auth/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,password:pw,totp:(document.getElementById('totp').value||'').trim()||undefined,next:next()})})
+      .then(function(r){return r.json();}).then(function(j){
+        if(j.ok){location.replace(j.next||next());return;}
+        if(j.need2fa){document.getElementById('tf').classList.remove('hide');var t=document.getElementById('totp');msg.textContent=L()?(j.error==='That code is not right.'?'Ese código no es correcto.':'Escribe el código de 6 dígitos de tu app.'):j.error;go.disabled=false;t.focus();t.select();return;}
+        msg.textContent=L()&&ES[j.error]?ES[j.error]:(j.error||'Error');go.disabled=false;f.pw.select();
+      }).catch(function(){msg.textContent=E[L()?'es':'en'].net;go.disabled=false;});
+  });
+})();
+</script>
+<script src="/read-aid.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+{
+ "files": [
+  {
+   "n": "Doc 1 · Collection letter (9 Mar 2026) and envelope",
+   "h": "01-collection-letter.pdf",
+   "g": "Letters"
+  },
+  {
+   "n": "Doc 2 · Written dispute sent by the client (20 Mar 2026)",
+   "h": "02-dispute-letter.pdf",
+   "g": "Letters"
+  },
+  {
+   "n": "Doc 3 · Certified-mail return card (24 Mar 2026)",
+   "h": "03-certified-mail-receipt.pdf",
+   "g": "Letters"
+  },
+  {
+   "n": "Doc 4 · Call log, work number (Apr-May 2026)",
+   "h": "04-call-log.pdf",
+   "g": "Records the client kept"
+  },
+  {
+   "n": "Doc 5 · Summons and complaint (served 28 Oct 2026)",
+   "h": "05-summons-and-complaint.pdf",
+   "g": "Court papers"
+  },
+  {
+   "n": "Doc 6 · Final Demo Bank statement (Aug 2021)",
+   "h": "06-final-bank-statement.pdf",
+   "g": "Records the client kept"
+  }
+ ],
+ "chunks": [
+  {
+   "f": 0,
+   "p": 1,
+   "t": "FICTIONAL SAMPLE - NOT A REAL CASE. All names, numbers and dates are made up.\nEXAMPLE CREDIT RECOVERY, LLC\n400 Placeholder Avenue, Suite 9, Example City, FL 00000   (850) 555-0177\nMarch 9, 2026\nLucia Ortega\n123 Sample Street\nExample City, FL 00000\nRe: Account ending 0000   Original creditor: Demo Bank, N.A.\nExample Credit Recovery, LLC is a debt collector. We are trying to collect a debt\nthat you owe to Example Credit Recovery, LLC. We will use any information you\ngive us to help collect the debt.\nOur information shows:\n  Balance when the account was charged off ........ $1,642.17\n  Fees ............................................ $200.00\n  Total amount of the debt now .................... $1,842.17\nHow can you dispute the debt?\nCall or write to us by April 13, 2026, to dispute all or part of the debt.\nIf you write to us by April 13, 2026, we must stop collection on any amount\nyou dispute until we send you information that shows you owe the debt.\nCollections Department"
+  },
+  {
+   "f": 0,
+   "p": 2,
+   "t": "FICTIONAL SAMPLE - NOT A REAL CASE. All names, numbers and dates are made up.\nENVELOPE (front), scanned by the client\nFrom: Example Credit Recovery, LLC, 400 Placeholder Avenue, Suite 9, Example City, FL 00000\nTo:   Lucia Ortega, 123 Sample Street, Example City, FL 00000\nPostmark: EXAMPLE CITY FL   MAR 10 2026\nClient's note on the envelope: \"Got this in the mail on March 12.\""
+  },
+  {
+   "f": 1,
+   "p": 1,
+   "t": "FICTIONAL SAMPLE - NOT A REAL CASE. All names, numbers and dates are made up.\nLucia Ortega\n123 Sample Street, Example City, FL 00000\nMarch 20, 2026\nExample Credit Recovery, LLC\nCollections Department\n400 Placeholder Avenue, Suite 9, Example City, FL 00000\nSent by certified mail, article number 0000 0000 0000 0000 0000\nRe: Account ending 0000\nI dispute this debt and the amount of $1,842.17 in your letter of March 9, 2026.\nPlease send me proof that I owe this amount, a copy of the agreement, an\nexplanation of the $200.00 in fees, and proof that you own the account.\nPlease do not call me at work. My employer does not allow personal calls.\nLucia Ortega"
+  },
+  {
+   "f": 2,
+   "p": 1,
+   "t": "FICTIONAL SAMPLE - NOT A REAL CASE. All names, numbers and dates are made up.\nDOMESTIC RETURN RECEIPT (sample form, scanned by the client)\nArticle addressed to: Example Credit Recovery, LLC, Collections Department\nArticle number: 0000 0000 0000 0000 0000\nSignature of agent: J. Placeholder\nDate of delivery: 03/24/2026"
+  },
+  {
+   "f": 3,
+   "p": 1,
+   "t": "FICTIONAL SAMPLE - NOT A REAL CASE. All names, numbers and dates are made up.\nCALL LOG kept by Lucia Ortega - calls to her work number (850) 555-0190\nDate        Time      Caller ID          Notes\n04/06/2026  10:12 AM  (850) 555-0177     Asked for Lucia about the Demo Bank account.\n04/09/2026  11:40 AM  (850) 555-0177     Voicemail at the front desk.\n04/15/2026  09:05 AM  (850) 555-0177     Told the caller my employer does not allow personal calls.\n04/20/2026  02:31 PM  (850) 555-0177     Hung up when I answered.\n04/27/2026  10:55 AM  (850) 555-0177     Asked for a payment today.\n05/01/2026  03:15 PM  (850) 555-0177     Voicemail at the front desk.\n05/06/2026  09:47 AM  (850) 555-0177     Said the account will go to a lawyer.\n05/11/2026  01:20 PM  (850) 555-0177     Missed call.\n05/15/2026  10:02 AM  (850) 555-0177     Asked for Lucia by name.\nTotal: 9 calls. Written by hand each day; typed up on May 16, 2026."
+  },
+  {
+   "f": 4,
+   "p": 1,
+   "t": "FICTIONAL SAMPLE - NOT A REAL CASE. All names, numbers and dates are made up.\nIN THE COUNTY COURT IN AND FOR EXAMPLE COUNTY, FLORIDA (FICTIONAL)\nEXAMPLE CREDIT RECOVERY, LLC, Plaintiff,\nv.                                                    Case No. SAMPLE-2026-CC-000123\nLUCIA ORTEGA, Defendant.\nSUMMONS\nYou are being sued (fictional sample). You have 20 days after you get this\npaper to give the clerk your written answer to the complaint on page 2.\nRETURN OF SERVICE (sample): Served on Lucia Ortega at 123 Sample Street,\nExample City, FL 00000, on October 28, 2026, at 6:40 PM."
+  },
+  {
+   "f": 4,
+   "p": 2,
+   "t": "FICTIONAL SAMPLE - NOT A REAL CASE. All names, numbers and dates are made up.\nIN THE COUNTY COURT IN AND FOR EXAMPLE COUNTY, FLORIDA (FICTIONAL)\nCase No. SAMPLE-2026-CC-000123        Filed: June 1, 2026\nCOMPLAINT\n1. Plaintiff Example Credit Recovery, LLC says it is the owner of an account\n   first opened with Demo Bank, N.A., ending 0000.\n2. Plaintiff says Defendant owes $1,842.17.\n3. Plaintiff asks the Court for judgment for $1,842.17, plus costs.\nSample & Placeholder, P.A., for Plaintiff\nBy: Jordan Testwell (fictional), Florida Bar No. 0000000"
+  },
+  {
+   "f": 5,
+   "p": 1,
+   "t": "FICTIONAL SAMPLE - NOT A REAL CASE. All names, numbers and dates are made up.\nDEMO BANK, N.A. - CREDIT CARD STATEMENT (sample)\nAccount ending 0000      Opened: 04/02/2019\nStatement closing date: 08/31/2021\nLast payment received: 01/15/2021   $75.00\nPrevious balance ................................ $1,598.40\nInterest charged ................................ $43.77\nNew balance ..................................... $1,642.17\nThis account was closed and charged off on 08/31/2021."
+  }
+ ],
+ "fictional": true
+}

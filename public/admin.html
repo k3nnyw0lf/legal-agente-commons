@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Legal Agente</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23111'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' text-anchor='middle' fill='%23ece8df'%3ELA%3C/text%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem('la-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<link rel="stylesheet" href="/la.css">
+</head>
+<body>
+<a class="skip" href="#main"><span lang="en">Skip to main content</span><span lang="es">Ir al contenido</span></a>
+<nav class="nav"><a class="logo" href="/">Legal Agente</a><span class="mono">Admin</span><span class="sp"></span><a class="l" href="/app">Case files</a><a class="l" href="/security">Security</a><a class="l" href="/logout">Sign out</a><button type="button" class="theme" id="themeBtn" aria-label="Switch light / dark design"></button></nav>
+<main id="main">
+  <div><h1>Who can <em>open what.</em></h1><p class="note" style="margin-top:.8rem;max-width:62ch">Invite a lawyer or helper with a one-time link. They choose their own password; you never see it. Each person only opens the cases you tick, and the server enforces it.</p></div>
+
+  <section class="card" id="denied" class="hide" style="display:none"><h2>Admins only</h2><p class="note">This page is only for the admin login. <a href="/app">Back to case files</a>.</p></section>
+
+  <section class="card" id="inviteCard">
+    <h2>Invite someone</h2>
+    <form id="invForm" novalidate>
+      <div class="grid">
+        <div><label for="email">Their email (their username)</label><input id="email" type="email" autocomplete="off" placeholder="name@example.org" required></div>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
+          <div><label for="role">Role</label><select id="role"><option value="counsel">Counsel (lawyer)</option></select></div>
+          <div><label for="days">Link valid for (days)</label><input id="days" type="number" min="1" max="14" value="7"></div>
+        </div>
+      </div>
+      <div style="margin-top:14px"><label>Cases they can open</label><div class="cases" id="cases"></div></div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="mk" type="submit">Create invite link →</button></div>
+      <div class="msg" id="msg" role="alert"></div>
+    </form>
+    <div class="linkbox" id="linkbox" aria-live="polite">
+      <b>Invite link for <span id="lfor"></span></b> <span class="note">· valid until <span id="luntil"></span> · works once</span>
+      <code id="link"></code>
+      <button class="btn small" id="copy" type="button">Copy link</button>
+      <p class="note" style="margin-top:.7rem">Send it by email. When they open it, they set a password and land straight in their case.</p>
+    </div>
+  </section>
+
+  <section class="card" id="caseCard">
+    <h2>Add a case</h2>
+    <p class="note" style="margin-bottom:12px">Creates an empty case with its own code. Then open it, upload documents (PDFs or phone photos; scans are read with OCR), and press “Find dates &amp; people” on each one to build the timeline. Invite a lawyer to it from the form above.</p>
+    <form id="caseForm" novalidate>
+      <div class="grid">
+        <div><label for="ctitle">Case name</label><input id="ctitle" type="text" placeholder="e.g. Smith v. Jones — the deposit" autocomplete="off"></div>
+        <div><label for="ccn">Court and case number (optional)</label><input id="ccn" type="text" placeholder="e.g. Example County Ct. No. SAMPLE-2026-CC-000000" autocomplete="off"></div>
+      </div>
+      <div style="margin-top:14px"><label for="cnote">One line on what it's about (optional)</label><input id="cnote" type="text" autocomplete="off"></div>
+      <div style="margin-top:14px"><button class="btn" type="submit" id="cmk">Create case →</button></div>
+      <div class="msg" id="cmsg"></div>
+    </form>
+    <div id="added" style="margin-top:16px"></div>
+    <div class="linkbox" id="cbox"><b>Case created.</b> Its code is <code id="ccode" style="display:inline;margin:0 4px"></code> <span class="note">Open it in Case files with this code.</span> <a class="btn small" href="/app" style="margin-left:8px">Open case files →</a></div>
+  </section>
+
+  <section class="card"><h2>People with a login</h2><table><thead><tr><th>Email</th><th>Role</th><th>Can open</th><th>Since</th><th></th></tr></thead><tbody id="users"><tr><td colspan="5" class="note">Loading…</td></tr></tbody></table></section>
+  <section class="card"><h2>Invites waiting</h2><table><thead><tr><th>Email</th><th>Can open</th><th>Expires</th><th></th></tr></thead><tbody id="invites"><tr><td colspan="4" class="note">Loading…</td></tr></tbody></table></section>
+  <section class="card"><h2>Access log</h2><p class="note" style="margin-bottom:10px">Sign-ins, cases opened, files opened, uploads and admin changes, newest first (last 300).</p><div style="max-height:420px;overflow:auto"><table><thead><tr><th>When</th><th>Who</th><th>What</th><th>Detail</th></tr></thead><tbody id="log"><tr><td colspan="4" class="note">Loading…</td></tr></tbody></table></div></section>
+  <section class="card"><h2>Backups</h2><p class="note" style="margin-bottom:10px">Every night at 3–4 AM a copy of logins, added cases, notes, boards and upload lists goes to private storage. The last 30 are kept. Documents themselves stay in their own private storage.</p><table><tbody id="backups"><tr><td class="note">Loading…</td></tr></tbody></table><button class="btn small" id="bnow" type="button" style="margin-top:12px">Make a backup now</button></section>
+  <section class="card" id="settings"><h2>Settings: citation checks</h2>
+    <p class="note" style="margin-bottom:10px">The "Check citations" tab looks up each cited case on CourtListener (Free Law Project). It needs a free CourtListener token: sign in at courtlistener.com, open Profile, then Developer Tools, and copy the token. Paste it here. It is saved privately and never shown again.</p>
+    <p id="clstate" class="note">Loading…</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px"><div style="flex:1;min-width:240px"><label for="cltok">CourtListener token</label><input id="cltok" type="password" autocomplete="off" spellcheck="false"></div><button class="btn small" id="clsave" type="button">Save and test</button><button class="btn ghost small" id="clclear" type="button">Remove</button></div>
+    <div class="msg" id="clmsg" role="alert"></div>
+  </section>
+  <section class="card"><h2>File fingerprint log</h2>
+    <p class="note" style="margin-bottom:10px">Every file that comes into a case gets a fingerprint (SHA-256), written to a log where each record is chained to the one before it. Changing or removing any record breaks the chain. This check re-works every record.</p>
+    <button class="btn small" id="evchk" type="button">Check the log</button>
+    <div class="msg" id="evmsg" role="status" style="margin-top:10px"></div>
+  </section>
+</main>
+<script>
+(function(){
+  var root=document.documentElement,tb=document.getElementById('themeBtn');
+  function isDark(){var t=root.getAttribute('data-theme');return t?t==='dark':!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);}
+  function paintTheme(){tb.textContent=isDark()?'☀':'☾';}
+  tb.onclick=function(){var n=isDark()?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('la-theme',n);}catch(e){}paintTheme();};paintTheme();
+  var E=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+  var CASES={};
+  function day(t){return t?new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';}
+  function caseNames(codes){if(!codes)return 'All cases';return codes.map(function(c){return E((CASES[c]||c));}).join('<br>');}
+  function post(path,body){return fetch(path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();});}
+  function load(){
+    fetch('/api/admin/users',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+      if(!j.ok){document.getElementById('denied').style.display='';document.getElementById('inviteCard').classList.add('hide');return;}
+      CASES={};j.cases.forEach(function(c){CASES[c.code]=c.title;});
+      var ad=j.cases.filter(function(c){return c.added;});
+      document.getElementById('added').innerHTML=ad.length?'<table><thead><tr><th>Cases you added</th><th>Code</th><th></th></tr></thead><tbody>'+ad.map(function(c){return '<tr><td>'+E(c.title)+'</td><td><code style="display:inline">'+E(c.code)+'</code></td><td><button class="btn ghost small" data-delcase="'+E(c.code)+'">Delete</button></td></tr>';}).join('')+'</tbody></table>':'';
+      document.querySelectorAll('[data-delcase]').forEach(function(b){b.onclick=function(){if(!confirm('Delete this case, its uploaded documents and its notes? This cannot be undone (last night’s backup still has the notes, not the documents).'))return;post('/api/admin/delete-case',{code:b.dataset.delcase}).then(function(){document.getElementById('cases').dataset.done='';load();});};});
+      var cs=document.getElementById('cases');
+      if(!cs.dataset.done){cs.dataset.done='';cs.innerHTML=j.cases.map(function(c){return '<label><input type="checkbox" value="'+E(c.code)+'"'+(/lawyer view/.test(c.title)?' checked':'')+'><span>'+E(c.title)+'</span></label>';}).join('');cs.dataset.done=1;}
+      document.getElementById('users').innerHTML=j.users.map(function(u){
+        return '<tr><td>'+E(u.email)+(u.me?' <span class="note">(you)</span>':'')+'</td><td><span class="pill '+E(u.role)+'">'+E(u.role)+'</span></td><td>'+caseNames(u.codes)+'</td><td>'+day(u.created)+'</td><td>'+(u.me?'':'<button class="btn ghost small" data-rm="'+E(u.email)+'">Remove</button>')+'</td></tr>';
+      }).join('')||'<tr><td colspan="5" class="note">Nobody yet.</td></tr>';
+      document.getElementById('invites').innerHTML=j.invites.map(function(v){
+        return '<tr><td>'+E(v.email)+'</td><td>'+caseNames(v.codes)+'</td><td>'+day(v.expires)+'</td><td><button class="btn ghost small" data-cp="'+E(location.origin+'/setup?invite='+v.token)+'">Copy link</button> <button class="btn ghost small" data-cx="'+E(v.token)+'">Cancel</button></td></tr>';
+      }).join('')||'<tr><td colspan="4" class="note">No invites waiting.</td></tr>';
+      document.querySelectorAll('[data-rm]').forEach(function(b){b.onclick=function(){if(!confirm('Remove the login for '+b.dataset.rm+'? They will be signed out and cannot open any case.'))return;post('/api/admin/remove-user',{email:b.dataset.rm}).then(load);};});
+      document.querySelectorAll('[data-cx]').forEach(function(b){b.onclick=function(){if(!confirm('Cancel this invite? The link will stop working.'))return;post('/api/admin/cancel-invite',{token:b.dataset.cx}).then(load);};});
+      document.querySelectorAll('[data-cp]').forEach(function(b){b.onclick=function(){copy(b.dataset.cp,b);};});
+    }).catch(function(){document.getElementById('users').innerHTML='<tr><td colspan="5" class="note">Could not load.</td></tr>';});
+  }
+  function copy(text,btn){(navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){var o=btn.textContent;btn.textContent='Copied ✓';setTimeout(function(){btn.textContent=o;},1500);}).catch(function(){prompt('Copy this link:',text);});}
+  var f=document.getElementById('invForm'),msg=document.getElementById('msg'),mk=document.getElementById('mk');
+  f.addEventListener('submit',function(e){
+    e.preventDefault();msg.textContent='';
+    var codes=[].map.call(document.querySelectorAll('#cases input:checked'),function(i){return i.value;});
+    var email=document.getElementById('email').value.trim();
+    if(!email){msg.textContent='Write their email.';return;} if(!codes.length){msg.textContent='Tick at least one case.';return;}
+    mk.disabled=true;
+    post('/api/admin/invite',{email:email,role:document.getElementById('role').value,codes:codes,days:+document.getElementById('days').value||7}).then(function(j){
+      mk.disabled=false;if(!j.ok){msg.textContent=j.error||'Error';return;}
+      document.getElementById('lfor').textContent=email;document.getElementById('luntil').textContent=day(j.expires);document.getElementById('link').textContent=j.link;
+      document.getElementById('linkbox').classList.add('on');document.getElementById('copy').onclick=function(){copy(j.link,this);};load();
+    }).catch(function(){mk.disabled=false;msg.textContent='Could not reach the server.';});
+  });
+  load();
+  // add a case
+  document.getElementById('caseForm').addEventListener('submit',function(e){
+    e.preventDefault();var m=document.getElementById('cmsg');m.textContent='';var t=document.getElementById('ctitle').value.trim();if(!t){m.textContent='Give the case a name.';return;}
+    post('/api/admin/case',{title:t,cn:document.getElementById('ccn').value.trim(),note:document.getElementById('cnote').value.trim()}).then(function(j){if(!j.ok){m.textContent=j.error||'Error';return;}document.getElementById('ccode').textContent=j.code;document.getElementById('cbox').classList.add('on');document.getElementById('cases').dataset.done='';load();});
+  });
+  // access log
+  function loadLog(){fetch('/api/admin/log',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){if(!j.ok)return;
+    document.getElementById('log').innerHTML=j.rows.map(function(r){return '<tr><td style="white-space:nowrap">'+E(new Date(r.ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+'</td><td>'+E(r.email||'')+'<div class="note" style="font-size:.78rem">'+E(r.ip||'')+'</div></td><td>'+E(r.action)+'</td><td style="word-break:break-word">'+E(r.detail||'')+'</td></tr>';}).join('')||'<tr><td colspan="4" class="note">Nothing yet.</td></tr>';});}
+  // backups
+  function loadBk(){fetch('/api/admin/backups',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){if(!j.ok)return;
+    document.getElementById('backups').innerHTML=j.list.map(function(b){return '<tr><td>'+E(b.key.slice(8,18))+'</td><td>'+Math.round(b.size/1024)+' KB</td><td><a class="btn ghost small" href="/api/admin/backup?key='+encodeURIComponent(b.key)+'">Download</a></td></tr>';}).join('')||'<tr><td class="note">No backups yet. The first runs tonight, or press the button.</td></tr>';});}
+  document.getElementById('bnow').onclick=function(){var b=this;b.disabled=true;post('/api/admin/backup-now',{}).then(function(){b.disabled=false;loadBk();});};
+  loadLog();loadBk();
+  // citation checks: CourtListener token (write-only)
+  function loadSet(){fetch('/api/admin/settings',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){if(!j.ok)return;
+    document.getElementById('clstate').innerHTML=j.courtlistener?'<span class="tag green">On</span> Citation checks are switched on.'+(j.courtlistenerFromSecret?' (Token set on the server.)':''):'<span class="tag grey">Off</span> No token yet, so citations are listed but not checked.';});}
+  document.getElementById('clsave').onclick=function(){var b=this,m=document.getElementById('clmsg'),t=document.getElementById('cltok').value.trim();m.className='msg';m.textContent='';if(!t){m.textContent='Paste the token first.';return;}b.disabled=true;
+    post('/api/admin/courtlistener-token',{token:t}).then(function(j){b.disabled=false;if(!j.ok){m.textContent=j.error||'Could not save.';return;}document.getElementById('cltok').value='';m.className='ok';m.textContent='Saved. CourtListener accepted it.';loadSet();loadLog();}).catch(function(){b.disabled=false;m.textContent='Could not reach the server.';});};
+  document.getElementById('clclear').onclick=function(){if(!confirm('Remove the CourtListener token? Citation checks stop until you add one again.'))return;post('/api/admin/courtlistener-token',{clear:true}).then(function(){loadSet();loadLog();});};
+  loadSet();
+  // fingerprint log check
+  document.getElementById('evchk').onclick=function(){var b=this,m=document.getElementById('evmsg');b.disabled=true;m.className='note';m.textContent='Checking…';
+    fetch('/api/admin/evidence-chain',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){b.disabled=false;if(!j.ok){m.textContent=j.error||'Could not check.';return;}
+      m.className=j.broken?'msg':'ok';m.style.display='block';
+      m.innerHTML=j.broken?'<b>Broken.</b> Record '+E(j.broken.id)+' ('+E(j.broken.h)+', '+E(day(j.broken.ts))+'): '+E(j.broken.why)+'.':(j.n?'All '+j.n+' records are in place and linked, '+E(day(j.first))+' to '+E(day(j.last))+'. Last link: <code style="display:inline;word-break:break-all">'+E(j.head)+'</code>':'No records yet.');loadLog();
+    }).catch(function(){b.disabled=false;m.textContent='Could not reach the server.';});};
+})();
+</script>
+<script src="/read-aid.js" defer></script>
+</body>
+</html>

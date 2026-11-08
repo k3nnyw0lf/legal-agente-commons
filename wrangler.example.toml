@@ -1,0 +1,43 @@
+# Copy this file to wrangler.toml (which git ignores) and fill in YOUR OWN values.
+# Never commit real ids, account numbers, secrets or domains of a live deployment.
+name = "legal-agente-commons"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+# Add your own custom domain here only in your private wrangler.toml.
+# routes = [ { pattern = "cases.example.org", custom_domain = true } ]
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+
+[[kv_namespaces]]
+binding = "COMMENTS"
+id = "<your KV namespace id>"
+
+[ai]
+binding = "AI"
+
+# Private uploads and backups. Never public; served only through the worker after sign-in and a case code.
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "<your R2 bucket name>"
+
+# access_log and evidence tables (see schema.sql).
+[[d1_databases]]
+binding = "DB"
+database_name = "legal-agente-commons"
+database_id = "<your D1 database id>"
+
+[vars]
+ADMIN_EMAILS = "admin@example.org"
+PASSKEY_RP_ID = "localhost"
+PUBLIC_ORIGIN = "http://localhost:8787"
+MAIL_DOMAIN = "mail.example.org"
+AI_DRAFTING = "off"
+
+# Nightly backup of logins, notes, requests and added cases to the private bucket (08:00 UTC).
+[triggers]
+crons = ["0 8 * * *"]

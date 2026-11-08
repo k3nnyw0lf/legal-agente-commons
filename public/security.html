@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security — Legal Agente</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23111'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' text-anchor='middle' fill='%23ece8df'%3ELA%3C/text%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem('la-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('la-lang');if(l==='es'||l==='en'){document.documentElement.setAttribute('data-lang',l);document.documentElement.lang=l;}}catch(e){}</script>
+<link rel="stylesheet" href="/la.css">
+</head>
+<body>
+<a class="skip" href="#main"><span lang="en">Skip to main content</span><span lang="es">Ir al contenido</span></a>
+<nav class="nav"><a class="logo" href="/">Legal Agente</a><span class="sp"></span><a class="l" href="/app"><span lang="en">Case files</span><span lang="es">Expedientes</span></a><div class="lang"><button data-set="en">EN</button><button data-set="es">ES</button></div></nav>
+<main id="main">
+  <div><h1><span lang="en">Your <em>security.</em></span><span lang="es">Tu <em>seguridad.</em></span></h1><p class="note" id="who" style="margin-top:.6rem"></p></div>
+
+  <section class="card">
+    <h2><span lang="en">Two-step sign-in</span><span lang="es">Acceso en dos pasos</span></h2>
+    <div id="tfOff" class="hide">
+      <p class="note"><span lang="en">After your password, the site also asks for a 6-digit code from an authenticator app on your phone (Google Authenticator, Microsoft Authenticator, 1Password, or KeePassXC). A stolen password alone then isn't enough.</span><span lang="es">Después de tu contraseña, el sitio pide un código de 6 dígitos de una app autenticadora en tu teléfono (Google Authenticator, Microsoft Authenticator, 1Password o KeePassXC). Así una contraseña robada no basta.</span></p>
+      <button class="btn" id="start"><span lang="en">Turn it on</span><span lang="es">Activarlo</span> →</button>
+      <div id="setup" class="hide">
+        <p class="note" style="margin-top:1rem"><span lang="en">1. Scan this with your authenticator app (or type the key below).</span><span lang="es">1. Escanea esto con tu app autenticadora (o escribe la clave de abajo).</span></p>
+        <div class="qr" id="qr"></div>
+        <p class="note"><span lang="en">Key:</span><span lang="es">Clave:</span> <code id="key"></code></p>
+        <p class="note" style="margin-top:.8rem"><span lang="en">2. Type the 6-digit code it shows.</span><span lang="es">2. Escribe el código de 6 dígitos que muestra.</span></p>
+        <input id="c1" inputmode="numeric" autocomplete="one-time-code" placeholder="123456"> <button class="btn" id="confirm"><span lang="en">Confirm</span><span lang="es">Confirmar</span></button>
+        <div class="msg" id="m1"></div>
+      </div>
+      <div id="backup" class="hide">
+        <p class="ok"><span lang="en">Two-step sign-in is on.</span><span lang="es">El acceso en dos pasos está activo.</span></p>
+        <p class="note"><span lang="en">Save these backup codes somewhere safe (KeePassXC is perfect). Each works once if you lose your phone. They will not be shown again.</span><span lang="es">Guarda estos códigos de respaldo en un lugar seguro (KeePassXC es ideal). Cada uno sirve una vez si pierdes el teléfono. No se volverán a mostrar.</span></p>
+        <div class="codes" id="codes"></div>
+      </div>
+    </div>
+    <div id="tfOn" class="hide">
+      <p class="ok"><span lang="en">On.</span><span lang="es">Activo.</span> <span class="note" id="left"></span></p>
+      <p class="note"><span lang="en">To turn it off, type a current code or a backup code.</span><span lang="es">Para desactivarlo, escribe un código actual o uno de respaldo.</span></p>
+      <input id="c2" inputmode="numeric" placeholder="123456"> <button class="btn ghost" id="off"><span lang="en">Turn off</span><span lang="es">Desactivar</span></button>
+      <div class="msg" id="m2"></div>
+    </div>
+  </section>
+
+  <section class="card" id="pksec">
+    <h2><span lang="en">Passkeys: your face, fingerprint or PIN</span><span lang="es">Llaves de acceso: tu cara, huella o PIN</span></h2>
+    <p class="note"><span lang="en">A passkey lets this phone or computer sign you in with the face, fingerprint or PIN that unlocks it, instead of your password and the 6-digit code. It only works on this site's own address, so a fake site cannot trick it out of you. Your fingerprint and face never leave your device. Your password still works too.</span><span lang="es">Una llave de acceso deja que este teléfono o computadora te haga entrar con la cara, la huella o el PIN con que lo desbloqueas, en vez de la contraseña y el código de 6 dígitos. Solo funciona en la dirección propia de este sitio, así que un sitio falso no te la puede sacar. Tu huella y tu cara nunca salen de tu equipo. Tu contraseña sigue funcionando.</span></p>
+    <div id="pklist" style="margin:.6rem 0 1rem"></div>
+    <div id="pkadd">
+      <label for="pkname"><span lang="en">Name for this device (optional)</span><span lang="es">Nombre para este equipo (opcional)</span></label>
+      <input id="pkname" maxlength="60" placeholder="Laptop, iPhone…" autocomplete="off">
+      <label for="pkpw" style="margin-top:.6rem"><span lang="en">Your password, to confirm it is you</span><span lang="es">Tu contraseña, para confirmar que eres tú</span></label>
+      <input id="pkpw" type="password" autocomplete="current-password">
+      <div style="margin-top:.8rem"><button class="btn" id="pkgo"><span lang="en">Add a passkey on this device</span><span lang="es">Agregar una llave en este equipo</span> →</button></div>
+      <div class="msg" id="m4" role="alert" aria-live="polite"></div>
+    </div>
+    <p class="note hide" id="pkno"><span lang="en">Passkeys can only be added on this site's main address, in a browser that supports them (Chrome, Edge, Safari or Firefox, recent versions).</span><span lang="es">Las llaves solo se pueden agregar en la dirección principal de este sitio, con un navegador que las admita (Chrome, Edge, Safari o Firefox recientes).</span></p>
+  </section>
+
+  <section class="card">
+    <h2><span lang="en">Deadlines in your calendar</span><span lang="es">Fechas en tu calendario</span></h2>
+    <p class="note"><span lang="en">A private link your calendar app checks for new dates. Reminders come 3 days and 1 day before. Anyone with the link can see the dates, so keep it private; you can replace it at any time.</span><span lang="es">Un enlace privado que tu app de calendario revisa para ver fechas nuevas. Avisa 3 días y 1 día antes. Quien tenga el enlace ve las fechas: mantenlo privado; puedes cambiarlo cuando quieras.</span></p>
+    <button class="btn" id="cal"><span lang="en">Show my calendar link</span><span lang="es">Ver mi enlace de calendario</span></button> <button class="btn ghost" id="calnew"><span lang="en">Replace the link</span><span lang="es">Cambiar el enlace</span></button>
+    <p id="callink" style="margin-top:.8rem"></p>
+  </section>
+
+  <section class="card">
+    <h2><span lang="en">Sign out everywhere</span><span lang="es">Salir en todas partes</span></h2>
+    <p class="note"><span lang="en">Signs out every other phone and computer using your login. This one stays signed in.</span><span lang="es">Cierra la sesión en todos los otros teléfonos y computadoras con tu acceso. Este se queda conectado.</span></p>
+    <button class="btn ghost" id="soa"><span lang="en">Sign out other devices</span><span lang="es">Cerrar en otros equipos</span></button> <span class="note" id="m3"></span>
+  </section>
+</main>
+<script src="/vendor/qrcode-generator-1.4.4.js"></script>
+<script src="/vendor/simplewebauthn-browser-14.0.0/index.umd.min.js"></script>
+<script>
+(function(){
+  var root=document.documentElement,btns=document.querySelectorAll('.lang button');
+  function L(){return root.getAttribute('data-lang')==='es';}
+  function setLang(l){root.setAttribute('data-lang',l);root.lang=l;btns.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.set===l));});try{localStorage.setItem('la-lang',l);}catch(e){}}
+  btns.forEach(function(b){b.onclick=function(){setLang(b.dataset.set);};});setLang(L()?'es':'en');
+  function $(i){return document.getElementById(i);}
+  function post(p,b){return fetch(p,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})}).then(function(r){return r.json();});}
+  function load(){fetch('/api/auth/status',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+    if(!j.signedIn){location.replace('/login?next=%2Fsecurity');return;}
+    $('who').textContent=(L()?'Conectado como ':'Signed in as ')+j.email+' · '+j.role;
+    $('tfOn').classList.toggle('hide',!j.twofa);$('tfOff').classList.toggle('hide',!!j.twofa);
+    if(j.twofa)$('left').textContent=(L()?'Códigos de respaldo restantes: ':'Backup codes left: ')+j.backupLeft;
+    var pk=j.passkeys||[],day=function(t){try{return new Date(t).toLocaleDateString(L()?'es-US':'en-US',{day:'numeric',month:'short',year:'numeric'});}catch(e){return String(t||'').slice(0,10);}};
+    $('pklist').innerHTML=pk.length?pk.map(function(k){return '<div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:.45rem 0;border-top:1px solid var(--line)"><b>'+esc(k.name)+'</b><span class="note">'+(L()?'agregada ':'added ')+day(k.created)+' · '+(k.lastUsed?(L()?'último uso ':'last used ')+day(k.lastUsed):(L()?'aún sin usar':'not used yet'))+(k.synced?(L()?' · sincronizada en tus equipos':' · synced across your devices'):'')+'</span><button class="btn ghost small" data-rm="'+esc(k.id)+'">'+(L()?'Quitar':'Remove')+'</button></div>';}).join(''):'<p class="note">'+(L()?'Aún no tienes llaves de acceso.':'No passkeys yet.')+'</p>';
+    document.querySelectorAll('[data-rm]').forEach(function(b){b.onclick=function(){if(!confirm(L()?'¿Quitar esta llave? Ya no podrás entrar con ella.':'Remove this passkey? It will no longer sign you in.'))return;post('/api/me/passkey-remove',{id:b.dataset.rm}).then(load);};});
+  });}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  var pkOk=!!window.PublicKeyCredential&&window.isSecureContext;
+  if(!pkOk){$('pkadd').classList.add('hide');$('pkno').classList.remove('hide');}
+  $('pkgo').onclick=function(){
+    var m=$('m4');m.className='msg';m.textContent='';var pw=$('pkpw').value;
+    if(!pw){m.textContent=L()?'Escribe tu contraseña.':'Type your password.';return;}
+    $('pkgo').disabled=true;
+    post('/api/me/passkey-options',{password:pw}).then(function(j){if(!j.ok)throw new Error(j.error||'Error');$('pkpw').value='';return SimpleWebAuthnBrowser.startRegistration({optionsJSON:j.options});})
+      .then(function(resp){return post('/api/me/passkey-add',{response:resp,name:$('pkname').value});})
+      .then(function(j){if(!j.ok)throw new Error(j.error||'Error');m.className='ok';m.textContent=(L()?'Llave agregada: ':'Passkey added: ')+j.name+(L()?'. La próxima vez, en la página de entrada, toca “Entrar con una llave de acceso”.':'. Next time, on the sign-in page, press “Sign in with a passkey”.');$('pkname').value='';$('pkgo').disabled=false;load();})
+      .catch(function(err){var t=String((err&&err.message)||err);if(/NotAllowed|InvalidState/i.test((err&&err.name)||''))t=(err.name==='InvalidState')?(L()?'Este equipo ya tiene una llave para tu acceso.':'This device already has a passkey for your login.'):(L()?'Se canceló.':'Cancelled.');m.textContent=t;$('pkgo').disabled=false;});
+  };
+  $('start').onclick=function(){post('/api/me/2fa-start').then(function(j){if(!j.ok)return;var q=qrcode(0,'M');q.addData(j.uri);q.make();$('qr').innerHTML=q.createSvgTag({cellSize:5,margin:2,scalable:true});$('key').textContent=j.secret.replace(/(.{4})/g,'$1 ').trim();$('setup').classList.remove('hide');$('start').classList.add('hide');$('c1').focus();});};
+  $('confirm').onclick=function(){post('/api/me/2fa-confirm',{code:$('c1').value}).then(function(j){if(!j.ok){$('m1').textContent=j.error;return;}$('setup').classList.add('hide');$('backup').classList.remove('hide');$('codes').innerHTML=j.backup.map(function(c){return '<span>'+c+'</span>';}).join('');});};
+  $('off').onclick=function(){post('/api/me/2fa-off',{code:$('c2').value}).then(function(j){if(!j.ok){$('m2').textContent=j.error;return;}load();});};
+  function cal(reset){post('/api/me/calendar',{reset:!!reset}).then(function(j){if(!j.ok)return;$('callink').innerHTML='<code>'+j.link+'</code> <button class="btn ghost" id="cp">'+(L()?'Copiar':'Copy')+'</button>';$('cp').onclick=function(){navigator.clipboard&&navigator.clipboard.writeText(j.link);};});}
+  $('cal').onclick=function(){cal(false);};$('calnew').onclick=function(){if(confirm(L()?'¿Cambiar el enlace? El viejo dejará de funcionar.':'Replace the link? The old one stops working.'))cal(true);};
+  $('soa').onclick=function(){post('/api/me/signout-all').then(function(j){$('m3').textContent=j.ok?(L()?'Listo.':'Done.'):'';});};
+  load();
+})();
+</script>
+<script src="/read-aid.js" defer></script>
+</body>
+</html>
