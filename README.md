@@ -4,6 +4,8 @@
 
 Free, open tools that help people in Florida put their legal case in order, so volunteer lawyers can help them faster.
 
+*The name: Legal Agent-e, with the e for electronic. In Spanish, "agente" simply means agent.*
+
 > **Everything in this repo is made up.** The only case here is a fictional sample. Never add a real case, a real name or a real document.
 
 ## Where we are
@@ -84,6 +86,8 @@ Legal Agente is not a law firm and does not give legal advice.
 ## Español
 
 Herramientas abiertas y gratis para que la gente en Florida ponga su caso legal en orden, y los abogados voluntarios puedan ayudar más rápido.
+
+*El nombre: Legal Agent-e, con la e de electrónico. Y en español, "agente" es simplemente agente.*
 
 > **Todo en este repositorio es inventado.** El único caso aquí es un ejemplo ficticio. Nunca agregue un caso real, un nombre real ni un documento real.
 
