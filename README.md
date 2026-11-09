@@ -57,6 +57,14 @@ You need [Node.js](https://nodejs.org) 22 or newer. Nothing to install for the t
 npm test
 ```
 
+To see the real pages work in a real browser, without a server and without a Cloudflare account, you need Chrome or Edge:
+
+```bash
+node scripts/browser-test.mjs
+```
+
+It opens the pages in a headless browser, answers every request with the real worker running in memory, and saves screenshots to your temp folder. It reads a made-up letter with the real photo reader, so it needs an internet connection the first time.
+
 To run the app itself you need Cloudflare's `wrangler` and your own Cloudflare account. Copy `wrangler.example.toml` to `wrangler.toml`, fill in your own ids, and read the comments in it. The sample case opens with code `11111111` (client view) or `22222222` (lawyer view).
 
 ## How you can help

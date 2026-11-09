@@ -4,6 +4,22 @@ None of this is built yet. Every part follows [access-model.md](access-model.md)
 
 **Already built (2026-11-08), not part of the list below** (ideas taken from other legal-help tools, made our own way): Ask AI rules enforced in code (cited pages only, a fixed "a lawyer must answer this" notice in English or Spanish), dates found in the papers on the timeline, and a one-page summary for a volunteer. Still to do for these: a lawyer's review of the wording, and a way to mark a found date as checked.
 
+**Also built (2026-11-09), from the board's review of 12 new ideas.** Each has its own tests and a real-browser test (`node scripts/browser-test.mjs`, Chrome or Edge, no server). All the wording is a **draft for counsel and for a Spanish speaker**.
+
+| Built | What it does | Notes |
+|---|---|---|
+| [What is this letter?](letter-check.md) (`/letter`, public) | Photo → OCR on the phone → what kind of paper, the dates (each next to its piece of the photo), who can help from an approved list. Never says what to do. Blurry photo: asks for a new one. Social Security numbers blacked out before saving. | 26 made-up letters run as tests on every change. Blur limits need a test with real photos. |
+| Add to my calendar | A calendar file for each date the person ticked after checking it against the page. Nothing sent. Says the court's paper is what counts. The tick is kept for the case (this also finishes "a way to mark a found date as checked"). | |
+| Lawyer-ready binder | One tap: PDF with a cover, an index with page numbers, the summary, the timeline and every paper. No phones or addresses unless turned on. | Page numbers are read back out of the PDF in the tests. |
+| [Who opened my file](access-model.md) | The owner sees every view (who, when, what; no device addresses) and cuts off any invited helper with one tap. Lines kept 90 days. | Part of item 7 below. Administrators can still open every case. |
+| [Pro bono hours](pro-bono-hours.md) (`/hours`) | Helpers log time per case and download a year-end report. Private to the helper, never a score. | The Florida Bar rule 4-6.1 numbers were found on the Bar's own site and are shown only in a sourced note. |
+| [Volunteer training and quiz](volunteer-training.md) (`/training`) | 15 minutes: privacy, the no-advice line, conflicts, then a quiz. A helper cannot open a case until they pass. | **Draft for counsel review**, clearly marked. |
+| [Our numbers](impact-page.md) (`/impact`, public) | Counts by kind of case and county, no names. Under 10 shows "fewer than 10"; too few cases shows "not enough cases yet". | No donate button (FDACS). |
+
+**Not built, by decision:** WhatsApp intake (auto-replies are sends, and papers would pass through Meta), court-day checklists, library and 211 partners, the senior scam packet and the disaster papers kit. They were "later" or "hold" in the review.
+
+**Still to do for these seven:** a lawyer's review of every text; a Spanish reader; a test of the letter check with real phone photos and the person's yes; a test on a cheap Android phone with a screen reader; the open questions listed in each doc; and the same Social Security check for photos uploaded from other screens.
+
 ## 1. Self sign-up and eligibility
 
 A person in Florida signs up, answers a few plain questions, and learns whether the program can help. One question per screen, big buttons, English or Spanish to start (see [Languages](#10-languages)).
@@ -51,11 +67,13 @@ A trained student or staff member checks the file. The program checks for confli
 
 ## 6. Helper scores
 
-Never based on wins. Saying no never lowers a score. Scores can count tasks finished on time, clients who say they understood the help, and supervisor reviews.
+Never based on wins. Saying no never lowers a score. Scores can count tasks finished on time, clients who say they understood the help, and supervisor reviews. A helper's pro bono hours ([pro-bono-hours.md](pro-bono-hours.md)) are their own and never count toward a score.
 
 ## 7. Per-case access lists
 
 Enforced on the server for every route, with: the authorized-representative role, time limits per task, emergency access with a second approver, and an access log the client can read. Until this is built, an admin can open every case, so no real case may be added.
+
+**Partly built (2026-11-09):** the owner can read a short-lived log of who opened the case and can cut off any invited helper with one tap ([Who opened my file](access-model.md)). Still to build: the per-case list itself, the authorized-representative role, time limits, emergency access, and a client account that is not an administrator.
 
 ## 8. Phone helper app
 
@@ -107,6 +125,8 @@ Rules: [access-model.md, health compartment](access-model.md#health-compartment)
 ## Before any real case
 
 - An outside security review.
+- A lawyer's read of the **new wording** (letter check, calendar, binder, training and quiz, hours report, impact page), and a Spanish speaker's read of all of it.
+- The browser test (`node scripts/browser-test.mjs`) run on a real phone with a screen reader, and the letter check tried on real photos with the person's yes.
 - License notices in the app (AGPL-3.0): a "Source code" link for everyone who uses a running copy, and a short notice with the copyright, "no warranty", and a link to the license. Counsel confirms the license choice.
 - A lawyer's review of every AI feature against the "never gives legal advice" rule.
 - Answers to the [open questions for counsel](access-model.md#open-questions-for-counsel).

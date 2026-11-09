@@ -48,6 +48,8 @@ npm test
 
 This runs the tests and a check that looks for things that must never be here (email addresses, account ids, tokens). It needs no install.
 
+If you changed a page, also run `node scripts/browser-test.mjs` (needs Chrome or Edge). It tests the real pages on a phone-sized screen. Add a scenario to `scripts/browser-scenarios.mjs` for anything new that a person can tap. Write the tests **before** the code, and use only made-up data.
+
 To change the sample documents, edit `scripts/build-sample.mjs` and run:
 
 ```bash
