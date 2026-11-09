@@ -9,6 +9,7 @@ One Cloudflare Worker serves the pages in `public/` and answers the `/api/` call
 | File | What it does |
 |---|---|
 | `src/index.js` | The whole server. Routing, sign-in, roles, case data, files, search, AI, email in, calendar, backups. |
+| `src/grounding.js`, `src/paper-dates.js` | One-line re-exports of `public/grounding.mjs` and `public/paper-dates.mjs`, so the server and the browser pages share one copy of the rules. |
 | `src/sample-case.js` | The one **fictional** case, and its lawyer-view code. Real cases are never stored in code. |
 | `src/vendor/` | postal-mime (reads incoming email) and @simplewebauthn/server (passkeys). |
 
@@ -39,6 +40,8 @@ Main parts of `src/index.js`, top to bottom:
 | `app.html` | The case screen: tabs, map, timeline, money, letters, portals, fees, requests, responses, notes, search. |
 | `app-plus.js` | Adds the web graph, document search, exhibit binder, viewer, zoomable timeline, charts, overview, proof map, deadlines, requests with uploads, fingerprints, email in, citation checks, search by meaning, recordings, read aloud, talk, and Spanish. |
 | `brief.mjs` | The one-page summary for a volunteer (no DOM, also used by the tests). Opened from the "📄 One-page summary" button. |
+| `letter.html`, `letter.js`, `letter-check.mjs` | **"What is this letter?"** (public, no sign-in). Photo → OCR in the browser → what kind of paper, the dates on it (each next to its piece of the photo), who can help (approved list). Runs on the phone; nothing is sent unless the person saves it to a case. See [letter-check.md](letter-check.md). |
+| `grounding.mjs`, `paper-dates.mjs` | The Ask AI rules, the approved-sources rules for the letter check, and the date finder. Pure code, no DOM, used by the server, the pages and the tests. |
 | `read-aid.js` | Reading aid: bigger text, spacing, a reading ruler. |
 | `la.css` | Shared look for the public pages. |
 | `vendor/` | Libraries, at fixed versions. See `THIRD_PARTY_NOTICES.md`. |

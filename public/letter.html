@@ -1,0 +1,119 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What is this letter? · ¿Qué es esta carta?</title>
+<meta name="description" content="Send a photo of a letter or court paper. This helper says what kind of paper it is, which dates are written on it, and who can help. It never says what to do. The photo stays on your phone.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230b0c0c'/%3E%3Ctext x='32' y='42' font-family='Arial' font-weight='700' font-size='26' text-anchor='middle' fill='%23fff'%3ELA%3C/text%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem('la-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('la-lang');if(l==='es'||l==='en'){document.documentElement.setAttribute('data-lang',l);document.documentElement.setAttribute('lang',l);}}catch(e){}</script>
+<link rel="stylesheet" href="/la.css">
+<style>
+.lede{font-size:19px}@media (min-width:641px){.lede{font-size:24px}}
+.promise{border-left:10px solid var(--go);padding:15px 0 15px 15px;margin:20px 0;font-weight:700}
+.pick{display:grid;gap:12px;margin:20px 0 10px}
+@media (min-width:641px){.pick{grid-template-columns:1fr 1fr}}
+.pick label{margin:0}
+.pick input[type=file]{width:100%;max-width:none;border:2px solid var(--ink);padding:10px;min-height:56px;background:var(--surface)}
+.pick input[type=file]::file-selector-button{font:inherit;font-weight:700;color:#fff;background:var(--go);border:0;padding:10px 14px;margin-right:12px;min-height:44px;cursor:pointer}
+.pick .what{display:block;font-weight:700;margin-bottom:6px}
+#la-status{min-height:1.4em;margin:12px 0;font-weight:700}
+.callout{border-left:10px solid var(--tag-yellow-ink);background:var(--tag-yellow);color:var(--tag-yellow-ink);padding:15px;margin:20px 0}
+.result h2{margin:34px 0 12px}
+.kind{font-size:24px;font-weight:700;margin:0 0 8px}
+.quote{border-left:5px solid var(--line);padding:4px 0 4px 12px;margin:8px 0;color:var(--soft)}
+.quote b{color:var(--ink)}
+ol.dates{list-style:none;padding:0;margin:14px 0;display:grid;gap:18px}
+ol.dates li{border:2px solid var(--ink);padding:14px;display:grid;gap:10px}
+.dateBig{font-size:24px;font-weight:700}
+.crop{border:1px solid var(--line);max-width:100%;height:auto;background:#fff}
+.cropcap{font-size:16px;color:var(--soft)}
+.chk{display:flex;gap:12px;align-items:center;margin:4px 0 0;font-weight:700;cursor:pointer}
+.chk input{width:28px;height:28px;margin:0;flex:none}
+ul.help{list-style:none;padding:0;display:grid;gap:12px}
+ul.help li{border-top:1px solid var(--line);padding-top:10px}
+ul.help a{font-weight:700}
+.notadvice{margin:26px 0;padding:15px;border:2px solid var(--ink);font-weight:700}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.row input{max-width:14em}
+.small{font-size:16px;color:var(--soft)}
+.btn.big{font-size:19px;min-height:56px}
+</style>
+</head>
+<body>
+<a class="skip" href="#main"><span lang="en">Skip to main content</span><span lang="es">Ir al contenido</span></a>
+
+<header class="nav" role="banner">
+  <a class="logo" href="/">Legal Agente</a>
+  <ul aria-label="Sections">
+    <li><a href="/"><span lang="en">Home</span><span lang="es">Inicio</span></a></li>
+    <li><a href="/app"><span lang="en">Sign in</span><span lang="es">Entrar</span></a></li>
+  </ul>
+  <button type="button" class="theme" id="themeBtn" aria-label="Switch light / dark design"></button>
+  <div class="lang" role="group" aria-label="Language / Idioma"><button type="button" data-set="en" aria-pressed="true">English</button><button type="button" data-set="es" aria-pressed="false">Español</button></div>
+</header>
+
+<main id="main">
+  <h1><span lang="en">What is this letter?</span><span lang="es">¿Qué es esta carta?</span></h1>
+  <p class="lede"><span lang="en">Send a photo of a letter or a court paper. This helper says what kind of paper it is, which dates are written on it, and who can help. It never says what to do.</span><span lang="es">Mande una foto de una carta o de un papel del tribunal. Este ayudante dice qué tipo de papel es, qué fechas tiene escritas y quién puede ayudar. Nunca dice qué hacer.</span></p>
+
+  <p class="promise"><span lang="en">Your photo stays on this phone. Your papers never train AI. Delete them anytime.</span><span lang="es">Su foto se queda en este teléfono. Nunca usamos sus papeles para entrenar IA. Bórrelos cuando quiera.</span></p>
+
+  <div class="pick">
+    <div>
+      <label for="la-file"><span class="what"><span lang="en">Take a photo</span><span lang="es">Tomar una foto</span></span></label>
+      <input id="la-file" type="file" accept="image/*" capture="environment">
+    </div>
+    <div>
+      <label for="la-file2"><span class="what"><span lang="en">Choose a photo you already have</span><span lang="es">Elegir una foto que ya tiene</span></span></label>
+      <input id="la-file2" type="file" accept="image/*">
+    </div>
+  </div>
+  <p class="small"><span lang="en">Tips for a good photo: the whole page in the picture, good light, phone held steady. If the photo is blurry, this helper will ask for a new one instead of guessing.</span><span lang="es">Para una buena foto: la hoja completa en la imagen, buena luz y el teléfono quieto. Si la foto está borrosa, este ayudante pedirá una nueva en vez de adivinar.</span></p>
+
+  <p id="la-status" role="status" aria-live="polite"></p>
+
+  <section id="la-result" class="result" aria-live="polite" aria-label="Result" hidden></section>
+
+  <div class="row" id="la-actions" hidden>
+    <button type="button" class="btn secondary" id="la-delete"><span lang="en">Delete the photo now</span><span lang="es">Borrar la foto ahora</span></button>
+    <button type="button" class="btn secondary" id="la-another"><span lang="en">Another letter</span><span lang="es">Otra carta</span></button>
+  </div>
+
+  <p class="small"><span lang="en">The computer that reads the photo runs on this phone. The photo and its words are not sent anywhere unless you choose to save them to a case. Numbers that look like a Social Security number are hidden first.</span><span lang="es">La computadora que lee la foto funciona en este teléfono. La foto y sus palabras no se envían a ningún lado a menos que usted decida guardarlas en un caso. Los números que parecen un número de Seguro Social se ocultan primero.</span></p>
+  <p class="small"><span lang="en"><b>Legal Agente is not a law firm and does not give legal advice.</b> A computer reads the photo and can make mistakes. The court's paper is what counts.</span><span lang="es"><b>Legal Agente no es un bufete de abogados y no da consejo legal.</b> Una computadora lee la foto y puede equivocarse. Lo que cuenta es el papel del tribunal.</span></p>
+  <p class="small"><span lang="en">In an emergency, call 911. In a mental-health or suicide crisis, call or text 988.</span><span lang="es">En una emergencia, llame al 911. En una crisis de salud mental o de suicidio, llame o envíe un mensaje de texto al 988.</span></p>
+</main>
+
+<footer class="foot">
+  <div class="w">
+    <div>
+      <p class="love"><span lang="en">A project of Legal Agente, a Florida nonprofit being formed. Built in the open.</span><span lang="es">Un proyecto de Legal Agente, una organización sin fines de lucro que se está creando en Florida. Hecho a la vista de todos.</span></p>
+      <p class="meta"><span lang="en">Code license: AGPL-3.0. Draft wording: a Florida lawyer and a Spanish speaker still need to review the texts on this page.</span><span lang="es">Licencia del código: AGPL-3.0. Textos en borrador: un abogado de Florida y una persona que hable español todavía deben revisarlos.</span></p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement, btns=document.querySelectorAll('.lang button');
+  function set(l){root.setAttribute('data-lang',l);root.setAttribute('lang',l);
+    btns.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.set===l));});
+    try{localStorage.setItem('la-lang',l);}catch(e){}}
+  var saved=null;try{saved=localStorage.getItem('la-lang');}catch(e){}
+  set(saved||((navigator.language||'en').toLowerCase().indexOf('es')===0?'es':'en'));
+  btns.forEach(function(b){b.addEventListener('click',function(){set(b.dataset.set);});});
+  var tb=document.getElementById('themeBtn');
+  function isDark(){var t=root.getAttribute('data-theme');return t?t==='dark':!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);}
+  function paintTheme(){var d=isDark();tb.textContent=d?'☀':'☾';var l=root.getAttribute('data-lang')==='es';tb.setAttribute('aria-label',l?(d?'Cambiar a diseño claro':'Cambiar a diseño oscuro'):(d?'Switch to light design':'Switch to dark design'));tb.title=tb.getAttribute('aria-label');}
+  tb.addEventListener('click',function(){var n=isDark()?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('la-theme',n);}catch(e){}paintTheme();});
+  btns.forEach(function(b){b.addEventListener('click',paintTheme);});
+  paintTheme();
+})();
+</script>
+<script type="module" src="/letter.js"></script>
+<script src="/read-aid.js" defer></script>
+</body>
+</html>

@@ -14,6 +14,29 @@ export async function openSample(page) {
   await page.waitFor("document.getElementById('app').style.display === 'flex'", 15000);
 }
 
+// ---- made-up letters, drawn by the browser itself, so the real photo reader has something to read ----
+const letterHtml = (lines, blur = 0) => "data:text/html;charset=utf-8," + encodeURIComponent(
+  `<body style="margin:0;background:#fff"><div style="width:860px;padding:50px 60px;font:26px/1.55 Arial,Helvetica,sans-serif;color:#111;${blur ? `filter:blur(${blur}px)` : ""}">${lines.map(l => `<div>${l}</div>`).join("")}</div></body>`);
+export const DEBT_LETTER = [
+  "Example Credit Recovery, LLC", "PO Box 0000, Anytown, FL", "March 9, 2026", "Dana Example",
+  "Social Security Number: 987-65-4321",
+  "This communication is from a debt collector.", "This is an attempt to collect a debt.",
+  "Total amount of the debt now: $1,842.17",
+  "Unless you dispute the debt by April 13, 2026,", "we will assume it is valid. You have 30 days", "to dispute the debt in writing.",
+];
+async function makePng(page, url, name) {
+  await page.resize(980, 1300, false, 2);
+  await page.goto(url);
+  return page.shot(name);
+}
+// Sharpness of a picture, worked out by the real code in the page, to tune the blur limit.
+async function sharpOf(page, pngPath) {
+  const b64 = (await import("node:fs")).readFileSync(pngPath).toString("base64");
+  return page.eval(`(async()=>{const m=await import('/letter-check.mjs');const img=new Image();img.src='data:image/png;base64,${b64}';await img.decode();
+    const w=640,h=Math.round(img.height*w/img.width),c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(img,0,0,w,h);
+    const d=g.getImageData(0,0,w,h).data,gray=new Uint8Array(w*h);for(let i=0;i<w*h;i++)gray[i]=(d[4*i]*.299+d[4*i+1]*.587+d[4*i+2]*.114)|0;return m.sharpness(gray,w,h)})()`);
+}
+
 export const SCENARIOS = {
   async "the sample case opens on a phone"(page) {
     await openSample(page);
@@ -63,6 +86,90 @@ export const SCENARIOS = {
     await page.waitFor("document.querySelector('.ai-notice')", 15000);
     assert.match(await text(page, ".ai-notice"), /Esta pregunta es para un abogado/);
     await page.shot("03-ask-ai-notice-375");
+  },
+
+  async "letter check: the page works without signing in, on a phone, in both languages"(page) {
+    await page.resize(375, 812);
+    await page.goto("/letter");
+    await page.waitFor("document.getElementById('la-file')");
+    assert.match(await text(page, "h1"), /What is this letter\?/);
+    assert.match(await text(page, ".promise"), /never train AI/);
+    const r = await page.eval(`(()=>{const e=document.documentElement;return {wide:e.scrollWidth>innerWidth}})()`);
+    assert.equal(r.wide, false, "wider than the phone");
+    await page.click('.lang button[data-set="es"]');
+    assert.match(await text(page, "h1"), /¿Qué es esta carta\?/);
+    assert.match(await text(page, ".promise"), /Nunca usamos sus papeles/);
+    await page.click('.lang button[data-set="en"]');
+    await page.shot("10-letter-start-375");
+  },
+
+  async "letter check: a sharp photo of a made-up letter is read on the phone and nothing is stored"(page) {
+    const png = await makePng(page, letterHtml(DEBT_LETTER), "letter-sharp");
+    await page.resize(375, 812);
+    await page.goto("/letter");
+    console.log("     sharp letter: sharpness " + Math.round(await sharpOf(page, png)));
+    await page.upload("#la-file2", png);
+    await page.waitFor("document.querySelector('#la-result .kind')", 150000);
+    const t = await text(page, "#la-result");
+    assert.match(t, /Letter from a debt collector/);
+    assert.match(t, /April 13, 2026/);
+    assert.match(t, /March 9, 2026/);
+    assert.match(t, /30 days/, "the time period is quoted");
+    assert.match(t, /Consumer Financial Protection Bureau/);
+    assert.ok(!/987/.test(t), "no Social Security number on screen");
+    const cards = await page.eval(`[...document.querySelectorAll('#la-result ol.dates li')].map(li=>({iso:li.dataset.iso,crop:!!li.querySelector('canvas.crop')&&li.querySelector('canvas.crop').width>40,chk:!!li.querySelector('input[type=checkbox]')}))`);
+    assert.ok(cards.length >= 2 && cards.every(c => c.crop && c.chk), "every date has its photo and a checkbox: " + JSON.stringify(cards));
+    await page.shot("11-letter-result-375");
+    // nothing about the photo in browser storage
+    const st = await page.eval(`({ls:Object.entries(localStorage).map(([k,v])=>[k,String(v).length]),ss:sessionStorage.length})`);
+    assert.ok(st.ls.every(([k, n]) => /^la-/.test(k) && n < 100), "localStorage holds only small settings: " + JSON.stringify(st.ls));
+    assert.equal(st.ss, 0);
+    // delete now: the picture and the answer are gone
+    await page.click("#la-delete");
+    await page.waitFor("document.getElementById('la-result').hidden");
+    const gone = await page.eval(`({canvases:document.querySelectorAll('#la-result canvas').length,status:document.getElementById('la-status').textContent,file:document.getElementById('la-file2').value})`);
+    assert.equal(gone.canvases, 0);
+    assert.match(gone.status, /deleted/);
+    assert.equal(gone.file, "");
+  },
+
+  async "letter check: the Social Security number is blacked out in the saved photo"(page) {
+    const png = await makePng(page, letterHtml(DEBT_LETTER), "letter-ssn");
+    await page.resize(375, 812);
+    await page.goto("/letter");
+    await page.upload("#la-file2", png);
+    await page.waitFor("document.querySelector('#la-result #la-code')", 150000);
+    await page.type("#la-code", "11111111");
+    await page.click("#la-savecase");
+    await page.waitFor("document.getElementById('la-save-msg').textContent.includes('Saved')", 30000);
+    const ups = JSON.parse(await page.env.COMMENTS.get("uploads:sample-debt-ortega"));
+    const rec = ups.find(u => /letter-/.test(u.n));
+    assert.ok(rec, "the photo was saved to the case");
+    const stored = await page.env.FILES.get(rec.key);
+    assert.ok(stored, "it is in the private bucket");
+    // Read the SAVED picture again with the same photo reader: the number must not be there.
+    const back = await page.eval(`(async()=>{const r=await fetch('/cf/sample-debt-ortega/up/${rec.key}?code=11111111');const b=await r.blob();
+      const w=await Tesseract.createWorker(['eng'],1,{workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1'});
+      const t=(await w.recognize(b)).data.text;await w.terminate();return t})()`);
+    assert.match(back, /debt collector/i, "the saved photo is still readable");
+    assert.ok(!/987|65[- ]?4321/.test(back), "the saved photo still shows the number: " + back);
+    const textIdx = JSON.parse(await page.env.COMMENTS.get("text:sample-debt-ortega"));
+    assert.ok(!/987-65-4321/.test(JSON.stringify(textIdx)), "the saved text hides it too");
+    assert.match(JSON.stringify(textIdx), /\[hidden\]/);
+  },
+
+  async "letter check: a blurry photo gets a request for a new photo, not an answer"(page) {
+    const png = await makePng(page, letterHtml(DEBT_LETTER, 7), "letter-blurry");
+    await page.resize(375, 812);
+    await page.goto("/letter");
+    console.log("     blurry letter: sharpness " + Math.round(await sharpOf(page, png)));
+    await page.upload("#la-file2", png);
+    await page.waitFor("document.querySelector('#la-result .callout, #la-result .kind')", 150000);
+    const t = await text(page, "#la-result");
+    assert.match(t, /too blurry or too small/);
+    assert.ok(!/April 13/.test(t), "no dates from a blurry photo");
+    assert.equal(await page.eval(`document.querySelectorAll('#la-result ol.dates').length`), 0);
+    await page.shot("12-letter-blurry-375");
   },
 
   async "the Spanish switch translates the new strings"(page) {

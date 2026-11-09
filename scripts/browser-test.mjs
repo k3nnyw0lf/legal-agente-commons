@@ -4,7 +4,8 @@
 // stand-ins for KV, R2, D1 and AI (tests/helpers.mjs). Nothing listens for web traffic, nothing is deployed.
 //
 // Needs Chrome or Edge, and Node 22+. Set CHROME to the program path if it is not found.
-//   node scripts/browser-test.mjs [out-folder]      (screenshots go to the out-folder, default: your temp folder)
+//   node scripts/browser-test.mjs [out-folder]      (ONLY="name one|name two" runs just those scenarios)
+//         (screenshots go to the out-folder, default: your temp folder)
 // Fictional sample data only.
 import fs from "node:fs";
 import os from "node:os";
@@ -97,9 +98,9 @@ export async function startBrowser() {
     }
   });
   const page = {
-    problems, out: OUT,
-    async resize(width, height, mobile = true) { await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile }); },
-    async goto(p) { await send("Page.navigate", { url: p.startsWith("http") ? p : ORIGIN + p }); await this.waitFor("document.readyState === 'complete'", 20000); },
+    problems, out: OUT, env,
+    async resize(width, height, mobile = true, scale = 1) { await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: scale, mobile }); },
+    async goto(p) { await send("Page.navigate", { url: /^(https?|data):/.test(p) ? p : ORIGIN + p }); await this.waitFor("document.readyState === 'complete'", 20000); },
     async eval(expr) {
       const r = await send("Runtime.evaluate", { expression: expr, awaitPromise: true, returnByValue: true });
       if (r.exceptionDetails) throw new Error("eval: " + (r.exceptionDetails.exception && r.exceptionDetails.exception.description || r.exceptionDetails.text));
@@ -121,7 +122,9 @@ export async function startBrowser() {
       await send("DOM.setFileInputFiles", { nodeId, files: [].concat(files) });
       await this.eval(`document.querySelector(${JSON.stringify(sel)}).dispatchEvent(new Event('change',{bubbles:true}))`);
     },
-    async shot(name) { const r = await send("Page.captureScreenshot", { format: "png" }); const f = path.join(OUT, name + ".png"); fs.writeFileSync(f, Buffer.from(r.data, "base64")); return f; },
+    async shot(name, full = true) {
+      let clip; if (full) { const m = await send("Page.getLayoutMetrics"); clip = { x: 0, y: 0, width: Math.ceil(m.cssContentSize.width), height: Math.min(6000, Math.ceil(m.cssContentSize.height)), scale: 1 }; }
+      const r = await send("Page.captureScreenshot", { format: "png", ...(clip ? { clip, captureBeyondViewport: true } : {}) }); const f = path.join(OUT, name + ".png"); fs.writeFileSync(f, Buffer.from(r.data, "base64")); return f; },
     async setHtml(html) { const { frameTree } = await send("Page.getFrameTree"); await send("Page.setDocumentContent", { frameId: frameTree.frame.id, html }); },
   };
   return { page, close: b.close, send };
@@ -129,7 +132,7 @@ export async function startBrowser() {
 
 // ---- run ----
 if (import.meta.url === new URL(process.argv[1], "file:///").href || process.argv[1].endsWith("browser-test.mjs")) {
-  const only = process.env.ONLY ? process.env.ONLY.split(",") : null;
+  const only = process.env.ONLY ? process.env.ONLY.split("|") : null;
   const { page, close } = await startBrowser();
   let failed = 0;
   try {

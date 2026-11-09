@@ -965,7 +965,9 @@ const __AUTH = {
   roles: ["counsel"], // roles an admin can invite; invited people only open the case codes on their invite
   cookie: "la_session", days: 30, iter: 100000, maxFails: 10, minLen: 10,
 };
-const __PUBLIC = new Set(["/", "/login", "/setup", "/read-aid.js", "/la.css", "/favicon.ico", "/robots.txt", "/vendor/simplewebauthn-browser-14.0.0/index.umd.min.js"]);
+// The letter check ("What is this letter?") is public: it works on the phone and sends nothing to the server.
+const __PUBLIC = new Set(["/", "/login", "/setup", "/read-aid.js", "/la.css", "/favicon.ico", "/robots.txt", "/vendor/simplewebauthn-browser-14.0.0/index.umd.min.js",
+  "/letter", "/letter.js", "/letter-check.mjs", "/grounding.mjs", "/paper-dates.mjs"]);
 // Passkeys belong to one site name: PASSKEY_RP_ID and PUBLIC_ORIGIN in the settings (default: the address the request came to).
 function __pkFor(env, url) { return { rpID: String(env.PASSKEY_RP_ID || url.hostname), origin: String(env.PUBLIC_ORIGIN || url.origin) }; }
 if (typeof globalThis.SubtleCrypto === "undefined" && globalThis.crypto && crypto.subtle) globalThis.SubtleCrypto = crypto.subtle.constructor; // the passkey library looks for it
