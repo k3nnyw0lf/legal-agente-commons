@@ -27,7 +27,8 @@ A Cloudflare Worker app that keeps one case in order:
 - **File fingerprints** (SHA-256) kept in a chained log, so a changed file shows up.
 - **Search** inside every page (words, and by meaning in English and Spanish), OCR for scans, speech to text for recordings.
 - **Citation check** that sends only the citations to CourtListener (Free Law Project).
-- **Dates found in the papers:** every full date written on a page is added to the timeline, linked to that page, for people to check. Nothing is calculated.
+- **Dates found in the papers:** every full date written on a page is added to the timeline, linked to that page, for people to check. Nothing is calculated. Each date has a box to tick once checked against the page, and a button that saves a calendar file on the person's own device ("Add to my calendar"). Nothing is sent: no texts, no emails.
+- **What is this letter?** A public page (`/letter`): a photo of a letter goes through OCR on the phone, and the helper says what kind of paper it is, which dates are on it (each next to its piece of the photo) and who can help, from an approved list. It never says what to do. Social Security numbers are blacked out before anything is saved. See [docs/letter-check.md](docs/letter-check.md).
 - **One-page summary for a volunteer:** who's who, key events with page links, calendar dates as entered, open requests and missing pages, ready to print. It leaves out phone numbers and addresses.
 - **Email into a case** through private addresses.
 - **Reading aid** (`read-aid.js`) and a Spanish interface.

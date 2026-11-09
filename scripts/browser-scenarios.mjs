@@ -8,6 +8,8 @@ const text = (page, sel = "body") => page.eval(`document.querySelector(${JSON.st
 export async function openSample(page) {
   await page.resize(375, 812);
   await page.goto("/app");
+  await page.eval("localStorage.clear()"); // every scenario starts in English
+  await page.goto("/app");
   await page.waitFor("document.getElementById('code')");
   await page.type("#code", "11111111");
   await page.click("#enter");
@@ -36,6 +38,9 @@ async function sharpOf(page, pngPath) {
     const w=640,h=Math.round(img.height*w/img.width),c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(img,0,0,w,h);
     const d=g.getImageData(0,0,w,h).data,gray=new Uint8Array(w*h);for(let i=0;i<w*h;i++)gray[i]=(d[4*i]*.299+d[4*i+1]*.587+d[4*i+2]*.114)|0;return m.sharpness(gray,w,h)})()`);
 }
+
+// Catches what the page saves as a download, without leaving the phone.
+const catchDownloads = page => page.eval(`(()=>{window.__ics=[];const o=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){if(this.download){const n=this.download;fetch(this.href).then(r=>r.text()).then(t=>window.__ics.push({name:n,text:t}));return}return o.call(this)};return 1})()`);
 
 export const SCENARIOS = {
   async "the sample case opens on a phone"(page) {
@@ -120,6 +125,30 @@ export const SCENARIOS = {
     const cards = await page.eval(`[...document.querySelectorAll('#la-result ol.dates li')].map(li=>({iso:li.dataset.iso,crop:!!li.querySelector('canvas.crop')&&li.querySelector('canvas.crop').width>40,chk:!!li.querySelector('input[type=checkbox]')}))`);
     assert.ok(cards.length >= 2 && cards.every(c => c.crop && c.chk), "every date has its photo and a checkbox: " + JSON.stringify(cards));
     await page.shot("11-letter-result-375");
+    // Add to my calendar: only after a date is ticked, and nothing goes to the server.
+    await catchDownloads(page);
+    assert.equal(await page.eval(`[...document.querySelectorAll('#la-result ol.dates li button')].every(b=>b.disabled)&&document.getElementById('la-cal-all').disabled`), true, "nothing can be added before a date is checked");
+    const before = page.requests.length;
+    const iso = await page.eval(`(()=>{const li=document.querySelector('#la-result ol.dates li[data-iso="2026-04-13"]');li.querySelector('input[type=checkbox]').click();return li.dataset.iso})()`);
+    await page.eval(`document.querySelector('#la-result ol.dates li[data-iso="2026-04-13"] button').click()`);
+    await page.waitFor("window.__ics.length === 1");
+    const ics = await page.eval("window.__ics[0]");
+    assert.equal(ics.name, "date-2026-04-13.ics");
+    assert.match(ics.text, /DTSTART;VALUE=DATE:20260413/);
+    assert.ok(!/DTSTART;VALUE=DATE:20260309/.test(ics.text), "the date that was not checked is not in the file");
+    assert.match(ics.text, /court's paper is what counts/);
+    assert.ok(!/ATTENDEE|ACTION:EMAIL/.test(ics.text));
+    assert.deepEqual(page.requests.slice(before), [], "saving the calendar file sent nothing to the server");
+    assert.match(await text(page, "#la-cal-msg"), /Saved a calendar file on this phone/);
+    await page.eval(`document.querySelector('#la-result ol.dates li[data-iso="2026-03-09"] input[type=checkbox]').click()`);
+    await page.eval(`document.getElementById('la-cal-all').click()`);
+    await page.waitFor("window.__ics.length === 2");
+    const both = await page.eval("window.__ics[1]");
+    assert.equal(both.name, "dates-from-my-papers.ics");
+    assert.equal((both.text.match(/BEGIN:VEVENT/g) || []).length, 2);
+    await page.click('.lang button[data-set="es"]');
+    assert.match(await text(page, ".calbox"), /Lo que cuenta es el papel del tribunal/);
+    await page.click('.lang button[data-set="en"]');
     // nothing about the photo in browser storage
     const st = await page.eval(`({ls:Object.entries(localStorage).map(([k,v])=>[k,String(v).length]),ss:sessionStorage.length})`);
     assert.ok(st.ls.every(([k, n]) => /^la-/.test(k) && n < 100), "localStorage holds only small settings: " + JSON.stringify(st.ls));
@@ -170,6 +199,37 @@ export const SCENARIOS = {
     assert.ok(!/April 13/.test(t), "no dates from a blurry photo");
     assert.equal(await page.eval(`document.querySelectorAll('#la-result ol.dates').length`), 0);
     await page.shot("12-letter-blurry-375");
+  },
+
+  async "found dates: tick one after checking it, save it as a calendar file, and the tick is kept for the case"(page) {
+    await openSample(page);
+    await catchDownloads(page);
+    await page.click('.tab[data-view="timeline"]');
+    await page.waitFor("document.querySelectorAll('#timeline-view input[type=checkbox]').length > 3");
+    assert.match(await text(page, "#timeline-view"), /court's paper is what counts/);
+    const before = page.requests.length;
+    await page.eval(`(()=>{const b=[...document.querySelectorAll('#timeline-view .tphase')].find(p=>/Dates found/.test(p.innerText));window.__row=b.querySelector('.tev');window.__cb=window.__row.querySelector('input[type=checkbox]');window.__cb.click();return 1})()`);
+    await page.waitFor("[...document.querySelectorAll('#timeline-view .la-muted')].some(x=>x.textContent.startsWith('✔'))");
+    await page.eval("window.__row.querySelector('button').click()");
+    await page.waitFor("window.__ics.length === 1");
+    const f = await page.eval("window.__ics[0]");
+    assert.match(f.text, /BEGIN:VEVENT/);
+    assert.equal((f.text.match(/BEGIN:VEVENT/g) || []).length, 1, "only the ticked date");
+    assert.deepEqual(page.requests.slice(before).filter(r => !/\/api\/store/.test(r)), [], "only the tick itself is saved on the server; the file is not");
+    const kv = JSON.parse(await page.env.COMMENTS.get("datechecks:sample-debt-ortega"));
+    assert.equal(Object.keys(kv).length, 1);
+    assert.equal(kv[Object.keys(kv)[0]].by, "admin@example.org");
+    // Open the case again: still ticked.
+    await page.click("#lockbtn");
+    await page.type("#code", "11111111"); await page.click("#enter");
+    await page.waitFor("document.getElementById('app').style.display === 'flex'");
+    await page.click('.tab[data-view="timeline"]');
+    await page.waitFor("[...document.querySelectorAll('#timeline-view input[type=checkbox]')].some(c=>c.checked)");
+    await page.click("#la-lang");
+    await page.waitFor("document.getElementById('timeline-view').innerText.includes('Agregar a mi calendario')", 8000);
+    await page.eval(`(()=>{const b=[...document.querySelectorAll('#timeline-view .tphase')].find(p=>/Fechas encontradas|Dates found/.test(p.innerText));b.scrollIntoView();return 1})()`);
+    assert.equal(await page.eval("document.documentElement.scrollWidth <= innerWidth && document.getElementById('timeline-view').scrollWidth <= document.getElementById('timeline-view').clientWidth + 1"), true, "the timeline rows fit the phone screen");
+    await page.shot("04-found-dates-375", false);
   },
 
   async "the Spanish switch translates the new strings"(page) {

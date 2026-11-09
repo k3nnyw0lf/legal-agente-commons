@@ -42,6 +42,7 @@ Main parts of `src/index.js`, top to bottom:
 | `brief.mjs` | The one-page summary for a volunteer (no DOM, also used by the tests). Opened from the "📄 One-page summary" button. |
 | `letter.html`, `letter.js`, `letter-check.mjs` | **"What is this letter?"** (public, no sign-in). Photo → OCR in the browser → what kind of paper, the dates on it (each next to its piece of the photo), who can help (approved list). Runs on the phone; nothing is sent unless the person saves it to a case. See [letter-check.md](letter-check.md). |
 | `grounding.mjs`, `paper-dates.mjs` | The Ask AI rules, the approved-sources rules for the letter check, and the date finder. Pure code, no DOM, used by the server, the pages and the tests. |
+| `calendar-file.mjs`, `calendar-save.mjs` | **Add to my calendar.** Builds a calendar file (.ics) for dates a person checked against the paper, and saves it on the device. No invitations, no email or audio alarms, no network calls; each event says the court's paper is what counts. Used by the letter page and by "Dates found in the papers" in the case timeline (each found date has a box to tick, kept in the case's `datechecks` store). |
 | `read-aid.js` | Reading aid: bigger text, spacing, a reading ruler. |
 | `la.css` | Shared look for the public pages. |
 | `vendor/` | Libraries, at fixed versions. See `THIRD_PARTY_NOTICES.md`. |

@@ -77,7 +77,7 @@ export async function startBrowser() {
   await signIn();
   const b = await launch();
   const { send, on } = b;
-  const problems = [];
+  const problems = [], requests = [];
   await send("Page.enable"); await send("Runtime.enable"); await send("Network.enable"); await send("DOM.enable");
   await send("Fetch.enable", { patterns: [{ urlPattern: ORIGIN + "/*" }] });
   on(async m => {
@@ -87,6 +87,7 @@ export async function startBrowser() {
       const { requestId, request } = m.params;
       try {
         const u = new URL(request.url);
+        requests.push(request.method + " " + u.pathname);
         let body;
         if (request.postDataEntries && request.postDataEntries.length) body = Buffer.concat(request.postDataEntries.map(e => Buffer.from(e.bytes || "", "base64")));
         else if (request.postData) body = request.postData;
@@ -98,7 +99,7 @@ export async function startBrowser() {
     }
   });
   const page = {
-    problems, out: OUT, env,
+    problems, requests, out: OUT, env,
     async resize(width, height, mobile = true, scale = 1) { await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: scale, mobile }); },
     async goto(p) { await send("Page.navigate", { url: /^(https?|data):/.test(p) ? p : ORIGIN + p }); await this.waitFor("document.readyState === 'complete'", 20000); },
     async eval(expr) {

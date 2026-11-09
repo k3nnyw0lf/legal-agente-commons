@@ -1651,6 +1651,12 @@ To keep it on this computer, add a free voice: Windows Settings > Time & languag
     'File fingerprints': 'Huellas de los archivos', 'Check all files': 'Revisar todos los archivos', 'No fingerprint yet': 'Aún sin huella', 'Emails filed into the case': 'Correos archivados en el caso',
     'Recordings': 'Grabaciones', 'Transcribe': 'Transcribir', 'Transcribe again': 'Transcribir de nuevo', '⬆ Upload a recording': '⬆ Subir una grabación', 'No transcript yet.': 'Aún sin transcripción.', 'No recordings yet.': 'Aún no hay grabaciones.',
     'No page was cited for this answer. Check it against the papers before relying on it.': 'Esta respuesta no cita ninguna página. Revísela con los papeles antes de confiar en ella.',
+    'Add to my calendar': 'Agregar a mi calendario',
+    'Add all checked dates to my calendar (one file)': 'Agregar todas las fechas revisadas a mi calendario (un archivo)',
+    'I checked this date against the page': 'Revisé esta fecha con la página',
+    'A date is added only after it is checked against the paper.': 'Una fecha se agrega solo después de revisarla con el papel.',
+    "This saves a calendar file on your phone. Your own phone does the reminding. Nothing is sent: no texts and no emails. The court's paper is what counts, not this calendar.": 'Esto guarda un archivo de calendario en su teléfono. Su propio teléfono hace el recordatorio. No se envía nada: ni mensajes de texto ni correos. Lo que cuenta es el papel del tribunal, no este calendario.',
+    'Saved a calendar file on this phone.': 'Se guardó un archivo de calendario en este teléfono.',
     'Dates found in the papers (check each one)': 'Fechas encontradas en los papeles (revise cada una)', '📄 One-page summary': '📄 Resumen de una página',
     'Close in meaning': 'Parecido en significado','🔊 Read page': '🔊 Leer página', '🔊 Read the answer': '🔊 Leer la respuesta', '🔊 Read it': '🔊 Leerla', 'Stop': 'Parar', 'English': 'Inglés', 'Spanish': 'Español', 'Language: work it out': 'Idioma: detectarlo', 'What you said': 'Lo que dijiste',
   };
@@ -1673,6 +1679,58 @@ To keep it on this computer, add a free voice: Windows Settings > Time & languag
   document.body.appendChild(lb); paintLang();
   new MutationObserver(ms => { if (LANG !== 'es') return; ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) trNode(n); else if (n.nodeType === 3 && n.parentElement) trNode(n.parentElement); })); }).observe(document.body, { childList: true, subtree: true });
   trNode(document.body);
+
+  /* ================= FOUND DATES: CHECK EACH ONE, THEN ADD TO MY CALENDAR ================= */
+  // Under "Dates found in the papers" every date gets a box the person ticks after checking it against the page
+  // (kept for the case in the 'datechecks' store, with who ticked it), and a button that saves a calendar file on
+  // this device for the ticked dates (public/calendar-file.mjs). Nothing is sent: no texts, no emails.
+  const dcId = ev => 'd' + (ev.iso || '').replace(/-/g, '') + (() => { let h = 5381; for (const c of String(ev.u || '')) h = ((h * 33) ^ c.charCodeAt(0)) >>> 0; return h.toString(36); })();
+  window.laFoundDates = async function () {
+    const view = document.getElementById('timeline-view'); if (!view || !CASE) return;
+    const phases = [...view.querySelectorAll('.tphase')];
+    const idx = (CASE.timeline || []).map((ph, i) => ph.auto ? i : -1).filter(i => i >= 0);
+    if (!idx.length) return;
+    let docs = {}; try { docs = await store('datechecks'); } catch (e) { }
+    const cal = await import('/calendar-file.mjs'), sv = await import('/calendar-save.mjs');
+    const T = () => cal.CAL[LANG === 'es' ? 'es' : 'en'];
+    for (const i of idx) {
+      const ph = CASE.timeline[i], box = phases[i]; if (!box) continue;
+      const evs = [...box.querySelectorAll('.tev')];
+      const msg = document.createElement('div'); msg.className = 'la-muted'; msg.style.cssText = 'margin:6px 0 12px'; msg.setAttribute('role', 'status'); msg.setAttribute('aria-live', 'polite');
+      const note = document.createElement('p'); note.className = 'mnote'; note.textContent = cal.CAL.en.note;
+      const checkedEvents = () => ph.events.filter(ev => docs[dcId(ev)] && docs[dcId(ev)].text);
+      const toIcs = list => list.map(ev => ({ iso: ev.iso, where: String(ev.s || '').split(' · found')[0], quote: ev.t }));
+      const save = list => { const e = toIcs(list), f = cal.buildIcs(e, { lang: LANG }); if (!f) return; sv.saveIcs(f, cal.icsName(e, LANG)); msg.textContent = T().saved; trNode(msg); };
+      const allBtn = document.createElement('button'); allBtn.className = 'btn'; allBtn.textContent = cal.CAL.en.buttonAll;
+      const sync = () => { allBtn.disabled = !checkedEvents().length; };
+      allBtn.onclick = () => save(checkedEvents());
+      evs.forEach((row, j) => {
+        const ev = ph.events[j]; if (!ev || !ev.iso) return;
+        const id = dcId(ev), body = row.querySelector('.tbody') || row;
+        const wrap = document.createElement('div'); wrap.style.cssText = 'margin-top:6px;display:flex;flex-wrap:wrap;gap:10px;align-items:center';
+        const lab = document.createElement('label'); lab.style.cssText = 'display:flex;gap:8px;align-items:center;cursor:pointer';
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.style.cssText = 'width:22px;height:22px'; cb.checked = !!(docs[id] && docs[id].text);
+        const sp = document.createElement('span'); sp.textContent = 'I checked this date against the page';
+        lab.append(cb, sp);
+        const who = document.createElement('span'); who.className = 'la-muted'; who.style.fontSize = '14px';
+        const paintWho = () => { who.textContent = docs[id] && docs[id].text ? '✔ ' + String(docs[id].by || '').split('@')[0] + ' · ' + (docs[id].ts || '') : ''; };
+        const one = document.createElement('button'); one.className = 'btn'; one.textContent = cal.CAL.en.button; one.disabled = !cb.checked;
+        one.onclick = () => save([ev]);
+        cb.onchange = async () => {
+          one.disabled = !cb.checked;
+          const r = await storePut('datechecks', id, cb.checked ? { iso: ev.iso, u: ev.u } : null);
+          if (cb.checked) docs[id] = { text: '1', by: (r && r.by) || (ME && ME.email) || '', ts: (r && r.ts) || '' }; else delete docs[id];
+          paintWho(); sync();
+        };
+        wrap.append(lab, one, who); body.appendChild(wrap); paintWho();
+      });
+      sync();
+      const head = box.querySelector('.tph');
+      const tools = document.createElement('div'); tools.style.margin = '8px 0'; tools.append(allBtn, msg);
+      if (head) { head.after(note); note.after(tools); } else { box.prepend(tools); box.prepend(note); }
+    }
+    if (LANG === 'es') trNode(view);
+  };
 
   /* ================= ONE-PAGE SUMMARY FOR A VOLUNTEER ================= */
   // Builds a printable page from the open case (public/brief.mjs): who's who, key events with page links,

@@ -7,6 +7,8 @@
 // Paper text is put on the page with textContent only, never as HTML.
 import { analyzeLetter, ssnBoxes, redactSsn, sharpness, UI, HELPERS } from "/letter-check.mjs";
 import { DONT_KNOW } from "/grounding.mjs";
+import { buildIcs, icsName, CAL } from "/calendar-file.mjs";
+import { saveIcs } from "/calendar-save.mjs";
 
 const $ = id => document.getElementById(id);
 const lang = () => (document.documentElement.getAttribute("data-lang") === "es" ? "es" : "en");
@@ -123,13 +125,16 @@ function render() {
 
   // dates, each with the photo next to it
   out.append(el("h2", { text: l.datesHeading }));
+  let allBtn = null;
   if (r.dates.length) {
     out.append(note("datesCheck"));
     const ol = el("ol", { class: "dates" });
     for (const d of r.dates) {
       const id = "la-chk-" + d.iso;
       const cb = el("input", { type: "checkbox", id }); cb.checked = state.checked.has(d.iso);
-      cb.addEventListener("change", () => { cb.checked ? state.checked.add(d.iso) : state.checked.delete(d.iso); bump(); });
+      const calBtn = el("button", { type: "button", class: "btn secondary small", text: CAL[lg].button }); calBtn.disabled = !cb.checked;
+      calBtn.addEventListener("click", () => addToCalendar([d]));
+      cb.addEventListener("change", () => { cb.checked ? state.checked.add(d.iso) : state.checked.delete(d.iso); calBtn.disabled = !cb.checked; allBtn && (allBtn.disabled = !state.checked.size); bump(); });
       const fig = d.box ? el("figure", { class: "cropfig" }, crop(state.canvas, d.box), el("figcaption", { class: "cropcap", text: l.dateOnPhoto })) : null;
       if (fig) fig.querySelector("canvas").setAttribute("role", "img"), fig.querySelector("canvas").setAttribute("aria-label", l.dateOnPhoto + ": " + d.raw);
       ol.append(el("li", { "data-iso": d.iso },
@@ -137,9 +142,13 @@ function render() {
         el("div", { class: "small", text: d.snippet }),
         fig,
         d.more ? el("div", { class: "small", text: l.alsoAgain.replace("{n}", d.more) }) : null,
-        el("label", { class: "chk", for: id }, cb, el("span", { text: l.checked }))));
+        el("label", { class: "chk", for: id }, cb, el("span", { text: l.checked })), calBtn));
     }
     out.append(ol);
+    // one file with every checked date, and the plain note: what it does, and that nothing is sent
+    allBtn = el("button", { type: "button", class: "btn secondary", id: "la-cal-all", text: CAL[lg].buttonAll }); allBtn.disabled = !state.checked.size;
+    allBtn.addEventListener("click", () => addToCalendar(r.dates.filter(x => state.checked.has(x.iso))));
+    out.append(el("div", { class: "calbox" }, allBtn, el("p", { class: "small", id: "la-cal-msg", role: "status", "aria-live": "polite", text: CAL[lg].needCheck }), el("p", { class: "small", text: CAL[lg].note })));
   } else out.append(note("noDates"));
 
   if (r.periods.length) {
@@ -155,6 +164,18 @@ function render() {
 
   // save (only on purpose)
   out.append(saveBlock());
+}
+
+// A calendar file for the dates the person checked. Made and saved on this phone; nothing is sent.
+function addToCalendar(dates) {
+  if (!state || !dates.length) return;
+  const lg = lang(), where = state.result && state.result.kind ? state.result.kind.name : "";
+  const evs = dates.map(d => ({ iso: d.iso, where, quote: d.snippet }));
+  const ics = buildIcs(evs, { lang: lg });
+  if (!ics) return;
+  saveIcs(ics, icsName(evs, lg));
+  const m = $("la-cal-msg"); if (m) m.textContent = CAL[lg].saved;
+  bump();
 }
 
 function saveBlock() {

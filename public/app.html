@@ -441,6 +441,9 @@ header .cn{color:#b1b4b6;font-size:16px}
   header .title,header .cn{display:none}
   .crumb>span:nth-of-type(n+2){display:none}
   .stage{flex-direction:column}
+  .tev{grid-template-columns:84px minmax(0,1fr);gap:10px}
+  .tbody{min-width:0;overflow-wrap:anywhere}
+  .tsrc{white-space:normal}
   .crumb{flex-wrap:wrap;row-gap:2px}
   .crumb .hubbtn{white-space:nowrap;min-height:44px;padding:8px 2px}
   .crumb>span:first-of-type{font-size:18px}
@@ -735,6 +738,7 @@ function timeline(){
     ph.events.map(ev=>`<div class="tev ${ev.f==='*'?'star':''}"><div class="tdate">${esc(ev.d)}</div><div class="tbody">${flag(ev.f)}${esc(ev.t)}<span class="tsrc">${ev.u?`<a class="lnk" href="${esc(ev.u)}" target="_blank" rel="noopener">${esc(ev.s)} ↗</a>`:esc(ev.s)}</span></div></div>`).join('')+
   `</div>`).join('');
   document.getElementById('timeline-view').innerHTML=h;
+  if(window.laFoundDates)laFoundDates();
 }
 function letters(){
   const card=l=>{const du=docUrl(l.ref);return `<div class="lcard ${l.dir}"><div class="lh"><span class="ldate">${esc(l.date)}</span>${du?`<a class="lref lnk" href="${du}" target="_blank" rel="noopener">${esc(l.ref)} ↗</a>`:`<span class="lref">${esc(l.ref)}</span>`}</div><div class="ltitle">${esc(l.title)}</div><div class="lparty">${esc(l.party)}</div><div class="lbody">${esc(l.body)}</div></div>`;};

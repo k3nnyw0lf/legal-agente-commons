@@ -592,7 +592,7 @@ const __app = {
     // --- editable stores (responses, requests, answers): code-gated, shared, saved to KV ---
     if (url.pathname === "/api/store") {
       // 2 = shared between the owner's view and the lawyer view (stored under the base slug).
-      const NS = { responses: 1, requests: 1, answers: 1, layout: 1, proof: 2, deadlines: 2, docreqs: 2 };
+      const NS = { responses: 1, requests: 1, answers: 1, layout: 1, proof: 2, deadlines: 2, docreqs: 2, datechecks: 2 };
       const sslug = (c, ns) => NS[ns] === 2 ? baseSlug(c.slug) : c.slug;
       if (request.method === "GET") {
         const c = caseByCode(url.searchParams.get("code"));
@@ -967,7 +967,7 @@ const __AUTH = {
 };
 // The letter check ("What is this letter?") is public: it works on the phone and sends nothing to the server.
 const __PUBLIC = new Set(["/", "/login", "/setup", "/read-aid.js", "/la.css", "/favicon.ico", "/robots.txt", "/vendor/simplewebauthn-browser-14.0.0/index.umd.min.js",
-  "/letter", "/letter.js", "/letter-check.mjs", "/grounding.mjs", "/paper-dates.mjs"]);
+  "/letter", "/letter.js", "/letter-check.mjs", "/grounding.mjs", "/paper-dates.mjs", "/calendar-file.mjs", "/calendar-save.mjs"]);
 // Passkeys belong to one site name: PASSKEY_RP_ID and PUBLIC_ORIGIN in the settings (default: the address the request came to).
 function __pkFor(env, url) { return { rpID: String(env.PASSKEY_RP_ID || url.hostname), origin: String(env.PUBLIC_ORIGIN || url.origin) }; }
 if (typeof globalThis.SubtleCrypto === "undefined" && globalThis.crypto && crypto.subtle) globalThis.SubtleCrypto = crypto.subtle.constructor; // the passkey library looks for it
