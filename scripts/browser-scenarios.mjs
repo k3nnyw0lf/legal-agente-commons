@@ -289,6 +289,50 @@ export const SCENARIOS = {
     assert.equal((await l.post("/api/case", { code: "22222222" })).status, 200);
   },
 
+  async "pro bono hours: log time on a phone, see the total, download the CSV and the printable report"(page) {
+    await page.resize(375, 812);
+    await page.goto("/hours");
+    await page.eval("localStorage.clear()"); await page.goto("/hours");
+    await page.waitFor("document.getElementById('hr-kind').options.length > 5");
+    await page.eval(`(()=>{window.__dl=[];const o=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){if(this.download){const n=this.download;fetch(this.href).then(r=>r.text()).then(t=>window.__dl.push({name:n,text:t}));return}return o.call(this)};window.__w=[];window.open=function(){return {document:{write:s=>window.__w.push(s),open:()=>{window.__w=[]},close:()=>{}}}};return 1})()`);
+    const y = await page.eval("new Date().getFullYear()");
+    const today = await page.eval("document.getElementById('hr-date').value");
+    await page.type("#hr-hours", "1.5"); await page.type("#hr-case", "Sample debt case"); await page.type("#hr-note", "Read the summons");
+    await page.click("#hr-add");
+    await page.waitFor("document.querySelectorAll('#hr-list .card2').length === 1");
+    await page.type("#hr-hours", "0.75"); await page.eval("document.getElementById('hr-kind').value='meeting'"); await page.click("#hr-add");
+    await page.waitFor("document.querySelectorAll('#hr-list .card2').length === 2");
+    assert.match(await text(page, "#hr-total"), /Total hours this year: 2.25/);
+    assert.match(await text(page, "main"), /Private to you/);
+    assert.equal(await page.eval("document.documentElement.scrollWidth <= innerWidth"), true, "fits the phone");
+    assert.match(await text(page, "#hr-bar"), /For lawyers/);
+    await page.eval("document.getElementById('hr-bar').open = true");
+    assert.match(await text(page, "#hr-bar-text"), /Rule 4-6.1/);
+    await page.shot("07-hours-375", false);
+    await page.click("#hr-csv");
+    await page.waitFor("window.__dl.length === 1");
+    const csv = await page.eval("window.__dl[0]");
+    assert.equal(csv.name, "pro-bono-hours-" + y + ".csv");
+    assert.match(csv.text, /Date,Hours,Activity,Case reference,Note/);
+    assert.match(csv.text, /1.50,Reviewing papers,Sample debt case,Read the summons/);
+    assert.match(csv.text, /0.75,Meeting/);
+    await page.click("#hr-print");
+    await page.waitFor("window.__w.join('').includes('Pro bono hours')");
+    const rep = await page.eval("window.__w.join('')");
+    assert.match(rep, /not a certification/);
+    assert.match(rep, /2.25/);
+    // edit and delete
+    await page.eval("document.querySelector('#hr-list .card2 button').click()");
+    assert.match(await text(page, "#hr-msg"), /Changing this entry/);
+    await page.click("#hr-cancel");
+    await page.eval("window.confirm=()=>true;document.querySelectorAll('#hr-list .card2')[0].querySelectorAll('button')[1].click()");
+    await page.waitFor("document.querySelectorAll('#hr-list .card2').length === 1");
+    await page.click('.lang button[data-set="es"]');
+    await page.waitFor("document.getElementById('hr-total').textContent.startsWith('Total de horas')");
+    assert.match(await text(page, "h1"), /Mis horas de servicio legal gratuito/);
+    assert.match(await text(page, "#hr-bar-text"), /Regla 4-6.1/);
+  },
+
   async "the Spanish switch translates the new strings"(page) {
     await openSample(page);
     await page.click("#la-lang");

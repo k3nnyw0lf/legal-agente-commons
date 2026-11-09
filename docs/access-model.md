@@ -94,6 +94,7 @@ The same note shows in Spanish when the screen is in Spanish (**En una emergenci
 - Scores are never based on wins. A helper who takes hard cases must not look worse than one who takes easy ones.
 - Scores can count things like: tasks finished on time, clients who say they understood the help, supervisor reviews.
 - A helper can leave at any time. Their open tasks go back to the program, and their access to those cases ends the same moment.
+- **Hours are the helper's own.** A helper can log the time they give and download a year-end report ([pro-bono-hours.md](pro-bono-hours.md)). Nobody else sees those hours, and they are never used in a score or a match.
 
 ## Personal preferences
 

@@ -10,6 +10,8 @@ import { SAMPLE_CASES, SAMPLE_COUNSEL_CODES } from "./sample-case.js";
 // Ask AI rules enforced in code (cited pages only, advice notice) and dates found in the papers.
 import { adviceAsked, isSpanish, checkCites, ADVICE_NOTICE } from "./grounding.js";
 import { paperDates, PAPER_DATES_PHASE } from "./paper-dates.js";
+// Pro bono hours tracker: checks one entry, adds up a year.
+import { cleanEntry, totals as hoursTotals } from "../public/hours.mjs";
 
 const CASES = SAMPLE_CASES;
 
@@ -570,6 +572,39 @@ const __app = {
       for (const r of rows) if (!last[r.who]) last[r.who] = r.ts;
       helpers.forEach(h => { h.lastSeen = last[h.email] || null; });
       return json({ ok: true, keepDays: days, logAvailable, helpers, entries: rows.slice(0, 200).map(r => ({ ts: r.ts, who: r.who, role: r.role, action: r.action, what: r.what || "" })) });
+    }
+
+    // --- pro bono hours: each signed-in helper keeps their own; nobody else reads them, and no score or match uses them ---
+    if (url.pathname === "/api/hours") {
+      const me = laUser(request); if (!me) return json({ ok: false, error: "Please sign in." }, 401);
+      const key = "hours:" + me.email;
+      const load = async () => { try { const v = JSON.parse((await env.COMMENTS.get(key)) || "[]"); return Array.isArray(v) ? v : []; } catch { return []; } };
+      if (request.method === "GET") {
+        const all = await load(), year = Number(url.searchParams.get("year")) || new Date().getUTCFullYear();
+        const entries = all.filter(e => String(e.date).startsWith(year + "-")).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : String(b.created).localeCompare(String(a.created))));
+        return json({ ok: true, year, years: [...new Set(all.map(e => Number(String(e.date).slice(0, 4))))].sort(), entries, totals: hoursTotals(entries) });
+      }
+      if (request.method === "POST") {
+        if (!__sameOrigin(request, url)) return json({ ok: false, error: "Bad request." }, 403);
+        let body; try { body = await request.json(); } catch { return json({ ok: false, error: "Bad request." }, 400); }
+        const action = String(body.action || ""), all = await load();
+        if (action === "delete") {
+          const i = all.findIndex(e => e.id === String(body.id || "")); if (i < 0) return json({ ok: false, error: "Not found." }, 404);
+          all.splice(i, 1); await env.COMMENTS.put(key, JSON.stringify(all)); return json({ ok: true });
+        }
+        if (action !== "add" && action !== "edit") return json({ ok: false, error: "Unknown action." }, 400);
+        const c = cleanEntry(body); if (!c.ok) return json({ ok: false, error: c.error }, 400);
+        if (action === "add") {
+          if (all.length >= 5000) return json({ ok: false, error: "That is a lot of entries. Download the report and start fresh." }, 400);
+          const id = __hex(crypto.getRandomValues(new Uint8Array(8)));
+          all.push({ id, ...c.entry, created: new Date().toISOString() });
+          await env.COMMENTS.put(key, JSON.stringify(all)); return json({ ok: true, id });
+        }
+        const i = all.findIndex(e => e.id === String(body.id || "")); if (i < 0) return json({ ok: false, error: "Not found." }, 404);
+        all[i] = { id: all[i].id, ...c.entry, created: all[i].created };
+        await env.COMMENTS.put(key, JSON.stringify(all)); return json({ ok: true, id: all[i].id });
+      }
+      return json({ ok: false, error: "Method not allowed." }, 405);
     }
 
     // --- cut a helper off, or let them back in (owner only; one tap each) ---
@@ -1466,7 +1501,7 @@ async function __authRoutes(request, env, url, ctx) {
 // Daily backup (cron, 08:00 UTC): logins, added cases, notes, boards, uploads lists and uploaded text → private bucket. Keeps 30 days.
 async function __backup(env) {
   if (!env.FILES) return null;
-  const prefixes = ["auth:user:", "auth:pk:", "case:", "uploads:", "text:", "textp:", "tx:", "mail:", "mailcfg:", "mailin:", "comments:", "responses:", "requests:", "answers:", "layout:", "proof:", "deadlines:", "docreqs:", "datechecks:", "block:"];
+  const prefixes = ["auth:user:", "auth:pk:", "case:", "uploads:", "text:", "textp:", "tx:", "mail:", "mailcfg:", "mailin:", "comments:", "responses:", "requests:", "answers:", "layout:", "proof:", "deadlines:", "docreqs:", "datechecks:", "block:", "hours:"];
   const out = { made: new Date().toISOString(), keys: {} };
   for (const pf of prefixes) { let cursor; do { const r = await env.COMMENTS.list({ prefix: pf, cursor }); for (const k of r.keys) out.keys[k.name] = await env.COMMENTS.get(k.name); cursor = r.list_complete ? null : r.cursor; } while (cursor); }
   const key = "backups/" + new Date().toISOString().slice(0, 10) + ".json";
