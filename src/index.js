@@ -14,6 +14,8 @@ import { paperDates, PAPER_DATES_PHASE } from "./paper-dates.js";
 import { cleanEntry, totals as hoursTotals } from "../public/hours.mjs";
 // Volunteer training and quiz gate (the answer key stays on the server).
 import { TRAINING, scoreQuiz, publicTraining, QUESTIONS } from "../public/training.mjs";
+// Public impact page: counts by kind of case and county (never a count under 10).
+import { impactCounts, validType, validCounty } from "../public/impact.mjs";
 
 const CASES = SAMPLE_CASES;
 
@@ -115,6 +117,18 @@ async function readComments(env, slug, thread) {
 async function readStore(env, ns, slug) {
   const raw = await env.COMMENTS.get(ns + ":" + slug);
   return raw ? JSON.parse(raw) : {};
+}
+
+// ==== Public impact numbers: only counts, and the rules in public/impact.mjs ====
+async function impactResponse(env) {
+  const cases = []; let cursor;
+  do {
+    const r = await env.COMMENTS.list({ prefix: "case:", cursor });
+    for (const k of r.keys) { try { const c = JSON.parse((await env.COMMENTS.get(k.name)) || "null"); const d = c && c.data; if (d) cases.push({ type: d.caseType, county: d.county, fictional: !!d.fictional }); } catch { } }
+    cursor = r.list_complete ? null : r.cursor;
+  } while (cursor);
+  const body = { ok: true, ...impactCounts(cases), updated: new Date().toISOString().slice(0, 10) };
+  return new Response(JSON.stringify(body), { headers: { "content-type": "application/json", "cache-control": "public, max-age=300", "x-robots-tag": "noindex, nofollow" } });
 }
 
 // ==== Who opened my file: a short-lived log the owner of a case can read, and a one-tap cut-off for any helper ====
@@ -1114,7 +1128,8 @@ const __AUTH = {
 };
 // The letter check ("What is this letter?") is public: it works on the phone and sends nothing to the server.
 const __PUBLIC = new Set(["/", "/login", "/setup", "/read-aid.js", "/la.css", "/favicon.ico", "/robots.txt", "/vendor/simplewebauthn-browser-14.0.0/index.umd.min.js",
-  "/letter", "/letter.js", "/letter-check.mjs", "/grounding.mjs", "/paper-dates.mjs", "/calendar-file.mjs", "/calendar-save.mjs"]);
+  "/letter", "/letter.js", "/letter-check.mjs", "/grounding.mjs", "/paper-dates.mjs", "/calendar-file.mjs", "/calendar-save.mjs",
+  "/impact", "/impact.js", "/impact.mjs"]);
 // Passkeys belong to one site name: PASSKEY_RP_ID and PUBLIC_ORIGIN in the settings (default: the address the request came to).
 function __pkFor(env, url) { return { rpID: String(env.PASSKEY_RP_ID || url.hostname), origin: String(env.PUBLIC_ORIGIN || url.origin) }; }
 if (typeof globalThis.SubtleCrypto === "undefined" && globalThis.crypto && crypto.subtle) globalThis.SubtleCrypto = crypto.subtle.constructor; // the passkey library looks for it
@@ -1444,10 +1459,14 @@ async function __authRoutes(request, env, url, ctx) {
       let b; try { b = await request.json(); } catch { return __authJson({ ok: false, error: "Bad request." }, 400); }
       const title = String(b.title || "").trim().slice(0, 160);
       if (!title) return __authJson({ ok: false, error: "Give the case a name." }, 400);
+      const caseType = String(b.type || ""), county = String(b.county || "");
+      if (caseType && !validType(caseType)) return __authJson({ ok: false, error: "That kind of case is not on the list." }, 400);
+      if (county && !validCounty(county)) return __authJson({ ok: false, error: "That county is not on the list." }, 400);
       let code = ""; for (let i = 0; i < 20; i++) { const c = String(10000000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 89999999)); if (!CASES[c] && !COUNSEL_CODES[c] && !(await env.COMMENTS.get("case:" + c))) { code = c; break; } }
       if (!code) return __authJson({ ok: false, error: "Try again." }, 500);
       const slug = (title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "case") + "-" + code.slice(-4);
       const data = { title, cn: String(b.cn || "").slice(0, 300), moneyNote: String(b.note || "").slice(0, 600), nodes: {}, edges: [], money: [], timeline: [{ phase: "Timeline", events: [] }], letters: [], portals: [], files: { intro: "Documents for this case. Upload them from the Requests tab or the Case files tab.", groups: [] }, cf: "/cf/" + slug + "/", textIndex: "@kv" };
+      if (caseType) data.caseType = caseType; if (county) data.county = county; // only these two are ever counted on the public impact page
       await env.COMMENTS.put("case:" + code, JSON.stringify({ slug, data, owner: me.email, created: new Date().toISOString() }));
       __log(env, ctx, request, me.email, "case created", title + " (" + code + ")");
       return __authJson({ ok: true, code, slug });
@@ -1575,6 +1594,7 @@ export default {
     if (calm && (request.method === "GET" || request.method === "HEAD")) return __calendar(env, request, calm[1]);
 
     const isGet = request.method === "GET" || request.method === "HEAD";
+    if (isGet && u.pathname === "/api/impact") return impactResponse(env); // public: counts only, never a count under 10
     if (isGet && __PUBLIC.has(u.pathname)) {
       if (u.pathname === "/login" && (await __session(request, env))) return Response.redirect(u.origin + __safeNext(u.searchParams.get("next")), 302);
       const r = await env.ASSETS.fetch(new Request(new URL(u.pathname, u.origin), request));

@@ -1,0 +1,66 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Our numbers · Nuestros números</title>
+<meta name="description" content="How many cases Legal Agente has, by kind of case and by county. Counts only, with no names. Any count under 10 shows as fewer than 10.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230b0c0c'/%3E%3Ctext x='32' y='42' font-family='Arial' font-weight='700' font-size='26' text-anchor='middle' fill='%23fff'%3ELA%3C/text%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem('la-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('la-lang');if(l==='es'||l==='en'){document.documentElement.setAttribute('data-lang',l);document.documentElement.setAttribute('lang',l);}}catch(e){}</script>
+<link rel="stylesheet" href="/la.css">
+<style>
+.wait{border-left:10px solid var(--line);padding:15px 0 15px 15px;margin:20px 0;font-size:24px;font-weight:700}
+table.nums{max-width:34em;margin:10px 0 30px}
+table.nums caption{text-align:left;font-weight:700;font-size:24px;padding:0 0 8px}
+table.nums td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.tot{font-size:26px;font-weight:700;margin:14px 0}
+.small{font-size:16px;color:var(--soft)}
+@media (max-width:760px){table.nums caption{display:block;width:100%}table.nums,table.nums tbody,table.nums tr,table.nums td{display:block;width:100%}table.nums tr{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:8px 0}table.nums td{border:0;padding:2px 0}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main"><span lang="en">Skip to main content</span><span lang="es">Ir al contenido</span></a>
+<header class="nav" role="banner">
+  <a class="logo" href="/">Legal Agente</a>
+  <ul aria-label="Sections"><li><a href="/"><span lang="en">Home</span><span lang="es">Inicio</span></a></li></ul>
+  <button type="button" class="theme" id="themeBtn" aria-label="Switch light / dark design"></button>
+  <div class="lang" role="group" aria-label="Language / Idioma"><button type="button" data-set="en" aria-pressed="true">English</button><button type="button" data-set="es" aria-pressed="false">Español</button></div>
+</header>
+
+<main id="main">
+  <h1><span lang="en">Our numbers</span><span lang="es">Nuestros números</span></h1>
+  <p class="lede"><span lang="en">How many cases the program has, by kind of case and by county. Counts only, with no names. Any number under 10 is shown as "fewer than 10", so no one can be picked out.</span><span lang="es">Cuántos casos tiene el programa, por tipo de caso y por condado. Solo cantidades, sin nombres. Cualquier número menor de 10 se muestra como "menos de 10", para que no se pueda identificar a nadie.</span></p>
+  <div id="im-body" aria-live="polite"><p class="small">…</p></div>
+  <p class="small" id="im-updated"></p>
+  <p class="small"><span lang="en">Legal Agente is not a law firm and does not give legal advice.</span><span lang="es">Legal Agente no es un bufete de abogados y no da consejo legal.</span></p>
+</main>
+
+<footer class="foot">
+  <div class="w">
+    <p class="love"><span lang="en">A project of Legal Agente, a Florida nonprofit being formed. Built in the open.</span><span lang="es">Un proyecto de Legal Agente, una organización sin fines de lucro que se está creando en Florida. Hecho a la vista de todos.</span></p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement, btns=document.querySelectorAll('.lang button');
+  function set(l){root.setAttribute('data-lang',l);root.setAttribute('lang',l);
+    btns.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.set===l));});
+    try{localStorage.setItem('la-lang',l);}catch(e){}}
+  var saved=null;try{saved=localStorage.getItem('la-lang');}catch(e){}
+  set(saved||((navigator.language||'en').toLowerCase().indexOf('es')===0?'es':'en'));
+  btns.forEach(function(b){b.addEventListener('click',function(){set(b.dataset.set);});});
+  var tb=document.getElementById('themeBtn');
+  function isDark(){var t=root.getAttribute('data-theme');return t?t==='dark':!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);}
+  function paintTheme(){var d=isDark();tb.textContent=d?'☀':'☾';var l=root.getAttribute('data-lang')==='es';tb.setAttribute('aria-label',l?(d?'Cambiar a diseño claro':'Cambiar a diseño oscuro'):(d?'Switch to light design':'Switch to dark design'));tb.title=tb.getAttribute('aria-label');}
+  tb.addEventListener('click',function(){var n=isDark()?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('la-theme',n);}catch(e){}paintTheme();});
+  btns.forEach(function(b){b.addEventListener('click',paintTheme);});
+  paintTheme();
+})();
+</script>
+<script type="module" src="/impact.js"></script>
+<script src="/read-aid.js" defer></script>
+</body>
+</html>

@@ -48,6 +48,10 @@
         <div><label for="ctitle">Case name</label><input id="ctitle" type="text" placeholder="e.g. Smith v. Jones — the deposit" autocomplete="off"></div>
         <div><label for="ccn">Court and case number (optional)</label><input id="ccn" type="text" placeholder="e.g. Example County Ct. No. SAMPLE-2026-CC-000000" autocomplete="off"></div>
       </div>
+      <div class="grid" style="margin-top:14px">
+        <div><label for="ctype">Kind of case (counted on the public impact page, with no names)</label><select id="ctype"><option value="">(not recorded)</option></select></div>
+        <div><label for="ccounty">County</label><select id="ccounty"><option value="">(not recorded)</option></select></div>
+      </div>
       <div style="margin-top:14px"><label for="cnote">One line on what it's about (optional)</label><input id="cnote" type="text" autocomplete="off"></div>
       <div style="margin-top:14px"><button class="btn" type="submit" id="cmk">Create case →</button></div>
       <div class="msg" id="cmsg"></div>
@@ -118,10 +122,12 @@
     }).catch(function(){mk.disabled=false;msg.textContent='Could not reach the server.';});
   });
   load();
+  // the kinds of case and the counties come from the one list the impact page uses
+  import('/impact.mjs').then(function(m){var t=document.getElementById('ctype'),c=document.getElementById('ccounty');m.CASE_TYPES.forEach(function(x){var o=document.createElement('option');o.value=x.id;o.textContent=x.en;t.appendChild(o);});m.COUNTIES.forEach(function(x){var o=document.createElement('option');o.value=x;o.textContent=x;c.appendChild(o);});}).catch(function(){});
   // add a case
   document.getElementById('caseForm').addEventListener('submit',function(e){
     e.preventDefault();var m=document.getElementById('cmsg');m.textContent='';var t=document.getElementById('ctitle').value.trim();if(!t){m.textContent='Give the case a name.';return;}
-    post('/api/admin/case',{title:t,cn:document.getElementById('ccn').value.trim(),note:document.getElementById('cnote').value.trim()}).then(function(j){if(!j.ok){m.textContent=j.error||'Error';return;}document.getElementById('ccode').textContent=j.code;document.getElementById('cbox').classList.add('on');document.getElementById('cases').dataset.done='';load();});
+    post('/api/admin/case',{title:t,cn:document.getElementById('ccn').value.trim(),note:document.getElementById('cnote').value.trim(),type:document.getElementById('ctype').value,county:document.getElementById('ccounty').value}).then(function(j){if(!j.ok){m.textContent=j.error||'Error';return;}document.getElementById('ccode').textContent=j.code;document.getElementById('cbox').classList.add('on');document.getElementById('cases').dataset.done='';load();});
   });
   // access log
   function loadLog(){fetch('/api/admin/log',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){if(!j.ok)return;

@@ -370,6 +370,33 @@ export const SCENARIOS = {
     } finally { h.restore(); page.env.TRAINING_REQUIRED = "off"; }
   },
 
+  async "impact page: with only the sample case it says not enough cases yet; with real cases, fewer than 10 is never a number"(page) {
+    await page.resize(375, 812);
+    await page.goto("/impact");
+    await page.eval("localStorage.clear()"); await page.goto("/impact");
+    await page.waitFor("document.querySelector('#im-body .wait')");
+    assert.match(await text(page, "#im-body"), /Not enough cases yet/);
+    await page.click('.lang button[data-set="es"]');
+    await page.waitFor("document.getElementById('im-body').innerText.includes('Todavía no hay suficientes casos')");
+    await page.click('.lang button[data-set="en"]');
+    // 12 debt cases in Collier and 4 housing cases in Lee, made the way the admin page makes them
+    const mk = (title, type, county) => page.env.COMMENTS.put("case:" + Math.floor(Math.random() * 1e8), JSON.stringify({ slug: "x", data: { title, caseType: type, county }, owner: "admin@example.org", created: new Date().toISOString() }));
+    for (let i = 0; i < 12; i++) await mk("Case " + i, "debt", "Collier");
+    for (let i = 0; i < 4; i++) await mk("Housing " + i, "housing", "Lee");
+    await page.goto("/impact");
+    await page.waitFor("document.querySelector('#im-body table')");
+    const t = await text(page, "#im-body");
+    assert.match(t, /Debt collection\s+12/);
+    assert.match(t, /Rent and eviction\s+fewer than 10/);
+    assert.match(t, /Collier County\s+12/);
+    assert.match(t, /Lee County\s+fewer than 10/);
+    assert.match(t, /The total is not shown while any count is under 10/);
+    assert.ok(!/4/.test(t), "the small count is not on the page");
+    assert.equal(await page.eval("document.documentElement.scrollWidth <= innerWidth"), true, "fits the phone");
+    await page.shot("09-impact-375", false);
+    for (const k of [...page.env.COMMENTS._map.keys()]) if (k.startsWith("case:")) await page.env.COMMENTS.delete(k);
+  },
+
   async "the Spanish switch translates the new strings"(page) {
     await openSample(page);
     await page.click("#la-lang");
