@@ -7,6 +7,9 @@ import PostalMime from "./vendor/postal-mime-4.1.4/postal-mime.js";
 import { generateRegistrationOptions, verifyRegistrationResponse, generateAuthenticationOptions, verifyAuthenticationResponse, isoBase64URL } from "./vendor/simplewebauthn-server-14.0.3/swa-server.min.mjs";
 // Case data. Real cases never go in this repo: they live in the private store of a deployment (KV "case:<code>").
 import { SAMPLE_CASES, SAMPLE_COUNSEL_CODES } from "./sample-case.js";
+// Ask AI rules enforced in code (cited pages only, advice notice) and dates found in the papers.
+import { adviceAsked, isSpanish, checkCites, ADVICE_NOTICE } from "./grounding.js";
+import { paperDates, PAPER_DATES_PHASE } from "./paper-dates.js";
 
 const CASES = SAMPLE_CASES;
 
@@ -500,6 +503,14 @@ const __app = {
         ev.sort((a, b) => { const x = Date.parse(a.d), y = Date.parse(b.d); return (isNaN(x) ? 9e15 : x) - (isNaN(y) ? 9e15 : y); });
         data.timeline = (data.timeline || []).concat([{ phase: "Emails filed into the case", events: ev }]);
       }
+      // Dates written in the papers (the built page text plus uploads this person may see), each linked to its page.
+      // Dates already on the timeline for the same file are left out. Nothing is calculated: people check each one.
+      try {
+        // A plain GET copy of the request: this POST's body has already been read, and the file fetch reuses the request.
+        const pt = await textFor(env, new Request(request.url, { headers: request.headers }), c);
+        const found = paperDates(pt.files, pt.chunks, { cf: data.cf, timeline: data.timeline });
+        if (found.length) data.timeline = (data.timeline || []).concat([{ phase: PAPER_DATES_PHASE, auto: true, events: found }]);
+      } catch { }
       data.dynamic = !CASES[String(body.code).trim()] && !COUNSEL_CODES[String(body.code).trim()];
       return json({ ok: true, slug: c.slug, case: data });
     }
@@ -514,9 +525,12 @@ const __app = {
       if (!q) return json({ ok: false, error: "Ask a question." }, 400);
       if (!env.AI) return json({ ok: false, error: "AI is not enabled on this deployment." });
       // Page excerpts found by the browser's search over the case documents, cited back as [n].
-      const ex = (Array.isArray(body.excerpts) ? body.excerpts : []).slice(0, 12).map((e, i) => "[" + (i + 1) + "] " + String(e.n || "").slice(0, 160) + ", page " + (Number(e.p) || 1) + ":\n" + String(e.t || "").slice(0, 1500)).join("\n\n");
+      const exList = (Array.isArray(body.excerpts) ? body.excerpts : []).slice(0, 12);
+      const lang = isSpanish(q) ? "es" : "en";
+      const notice = adviceAsked(q) ? ADVICE_NOTICE[lang] : "";
+      const ex = exList.map((e, i) => "[" + (i + 1) + "] " + String(e.n || "").slice(0, 160) + ", page " + (Number(e.p) || 1) + ":\n" + String(e.t || "").slice(0, 1500)).join("\n\n");
       const messages = [
-        { role: "system", content: "You are the case-file assistant for \"" + c.data.title + "\" (" + c.data.cn + "). Answer ONLY using the CASE FILE and the DOCUMENT EXCERPTS below. Be concise, factual and neutral; quote figures and dates exactly as written. " + (ex ? "Whenever a fact comes from an excerpt, cite it right after the sentence like [2] (several: [1][3]). Prefer the excerpts over the summary when they are more specific. " : "") + "If the answer is not in the file, say so and suggest which section to check. Never invent facts, names, numbers or citations. You organize and find; you never give legal advice. If asked what someone should do, whether they will win, or what the law requires of them, say that a licensed lawyer must answer that, and point to the facts in the file that the lawyer will need.\n\n=== CASE FILE ===\n" + caseCorpus(c.data) + (ex ? "\n\n=== DOCUMENT EXCERPTS ===\n" + ex : "") },
+        { role: "system", content: "You are the case-file assistant for \"" + c.data.title + "\" (" + c.data.cn + "). Answer ONLY using the CASE FILE and the DOCUMENT EXCERPTS below. Be concise, factual and neutral; quote figures and dates exactly as written. " + (ex ? "Whenever a fact comes from an excerpt, cite it right after the sentence like [2] (several: [1][3]). Prefer the excerpts over the summary when they are more specific. " : "") + "If the answer is not in the file, say so and suggest which section to check. Never invent facts, names, numbers or citations. You organize and find; you never give legal advice. If asked what someone should do, whether they will win, or what the law requires of them, say that a licensed lawyer must answer that, and point to the facts in the file that the lawyer will need. Answer in the language of the question (" + (lang === "es" ? "Spanish, using usted" : "English") + ").\n\n=== CASE FILE ===\n" + caseCorpus(c.data) + (ex ? "\n\n=== DOCUMENT EXCERPTS ===\n" + ex : "") },
         { role: "user", content: q },
       ];
       const MODELS = [
@@ -532,10 +546,14 @@ const __app = {
         try {
           const out = await env.AI.run(m, { messages, max_tokens: 700 });
           const ans = out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content));
-          if (ans && String(ans).trim()) return json({ ok: true, answer: String(ans).trim(), model: m });
+          if (ans && String(ans).trim()) {
+            // Only pages the AI was given may be cited; an answer with no cited page is flagged for the reader.
+            const g = checkCites(ans, exList.length);
+            return json({ ok: true, answer: g.text, model: m, cited: g.cited, grounded: g.grounded, notice, lang });
+          }
         } catch (e) { lastErr = (e && e.message) || String(e); }
       }
-      return json({ ok: false, error: "AI temporarily unavailable (" + (lastErr || "no model responded") + "). Keyword search still works." });
+      return json({ ok: false, error: "AI temporarily unavailable (" + (lastErr || "no model responded") + "). Keyword search still works.", notice, lang });
     }
 
     // --- AI: rewrite a rough answer into a formal discovery response ---

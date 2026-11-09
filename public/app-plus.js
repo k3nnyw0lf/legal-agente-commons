@@ -925,6 +925,9 @@
   const parseRecs = docs => Object.entries(docs || {}).map(([id, v]) => { try { return { id, by: v.by, ts: v.ts, ...JSON.parse(v.text) }; } catch (e) { return null; } }).filter(Boolean);
   const newId = p => (p || 'x') + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const docHref = (h, p) => (CASE.cf || '') + h + (p ? '#page=' + p : '');
+  // Shown above every AI answer: the server's fixed "a lawyer must answer this" notice, and a warning when no page was cited.
+  const aiGuard = d => (d.notice ? `<div class="ai-notice" style="margin:6px 0;padding:8px 10px;border-left:3px solid #b45309;background:rgba(180,83,9,.10)">⚖ ${E(d.notice)}</div>` : '') +
+    (d.ok && d.grounded === false ? `<div class="ai-warn" style="margin:6px 0;padding:6px 10px;border-left:3px solid #9ca3af;background:rgba(156,163,175,.12)">No page was cited for this answer. Check it against the papers before relying on it.</div>` : '');
   let ME = null;
   fetch('/api/auth/status', { credentials: 'same-origin' }).then(r => r.json()).then(j => { ME = j; }).catch(() => { });
   const isAdmin = () => ME && ME.role === 'admin';
@@ -943,11 +946,11 @@
     try {
       const r = await fetch('/api/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: CODE, q: term, excerpts: ex.map(x => ({ n: x.n, p: x.p, t: x.t })) }) });
       const d = await r.json();
-      if (!d.ok) { box.innerHTML = `<div class="aibox"><div class="aihdr">AI</div><div class="aians">${E(d.error || 'AI unavailable.')}</div></div>`; return; }
+      if (!d.ok) { box.innerHTML = `<div class="aibox"><div class="aihdr">AI</div>${aiGuard(d)}<div class="aians">${E(d.error || 'AI unavailable.')}</div></div>`; return; }
       const used = new Set();
       const ans = E(d.answer).replace(/\[(\d{1,2})\]/g, (m, n) => { const x = ex[+n - 1]; if (!x || !x.h) return m; used.add(+n); return `<a class="cite" href="${E(docHref(x.h, x.pdf ? x.p : 0))}">[${n}]</a>`; });
       const src = [...used].sort((a, b) => a - b).map(n => { const x = ex[n - 1]; return `<div>[${n}] <a href="${E(docHref(x.h, x.pdf ? x.p : 0))}">${E(x.n)} · ${x.pdf ? 'page' : 'part'} ${x.p}</a></div>`; }).join('');
-      box.innerHTML = `<div class="aibox"><div class="aihdr">AI answer</div><div class="aians ai-ans" style="white-space:pre-wrap">${ans}</div>${src ? `<div class="ai-src"><b>Sources</b>${src}</div>` : ''}<div class="aifoot">Grounded in this case file · numbers in [ ] open the page they came from · verify before relying on it</div></div>`;
+      box.innerHTML = `<div class="aibox"><div class="aihdr">AI answer</div>${aiGuard(d)}<div class="aians ai-ans" style="white-space:pre-wrap">${ans}</div>${src ? `<div class="ai-src"><b>Sources</b>${src}</div>` : ''}<div class="aifoot">Grounded in this case file · numbers in [ ] open the page they came from · verify before relying on it</div></div>`;
     } catch (e) { box.innerHTML = '<div class="aibox"><div class="aihdr">AI</div><div class="aians">AI unavailable right now.</div></div>'; }
   };
 
@@ -1345,11 +1348,11 @@ body.la-open header{padding-right:225px}
     try {
       const r = await fetch('/api/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: CODE, q: term, excerpts: ex.map(x => ({ n: x.n, p: x.p, t: x.t })) }) });
       const d = await r.json();
-      if (!d.ok) { box.innerHTML = `<div class="aibox"><div class="aihdr">AI</div><div class="aians">${E(d.error || 'AI unavailable.')}</div></div>`; return; }
+      if (!d.ok) { box.innerHTML = `<div class="aibox"><div class="aihdr">AI</div>${aiGuard(d)}<div class="aians">${E(d.error || 'AI unavailable.')}</div></div>`; return; }
       const used = new Set(), href = x => docHref(x.h, x.pdf || x.aud ? x.p : 0);
       const ans = E(d.answer).replace(/\[(\d{1,2})\]/g, (m, n) => { const x = ex[+n - 1]; if (!x || !x.h) return m; used.add(+n); return `<a class="cite" href="${E(href(x))}">[${n}]</a>`; });
       const src = [...used].sort((a, b) => a - b).map(n => { const x = ex[n - 1]; return `<div>[${n}] <a href="${E(href(x))}">${E(x.n)} · ${partWord(x.f, x.p)}</a></div>`; }).join('');
-      box.innerHTML = `<div class="aibox"><div class="aihdr">AI answer</div><div class="aians ai-ans" style="white-space:pre-wrap">${ans}</div>${src ? `<div class="ai-src"><b>Sources</b>${src}</div>` : ''}<div class="la-row" style="margin-top:8px"><button class="btn" data-sayans>🔊 Read the answer</button></div><div class="aifoot">Grounded in this case file · pages found by their words and by their meaning (English or Spanish) · numbers in [ ] open the page they came from · verify before relying on it</div></div>`;
+      box.innerHTML = `<div class="aibox"><div class="aihdr">AI answer</div>${aiGuard(d)}<div class="aians ai-ans" style="white-space:pre-wrap">${ans}</div>${src ? `<div class="ai-src"><b>Sources</b>${src}</div>` : ''}<div class="la-row" style="margin-top:8px"><button class="btn" data-sayans>🔊 Read the answer</button></div><div class="aifoot">Grounded in this case file · pages found by their words and by their meaning (English or Spanish) · numbers in [ ] open the page they came from · verify before relying on it</div></div>`;
       box.querySelector('[data-sayans]').onclick = () => say(d.answer);
     } catch (e) { box.innerHTML = '<div class="aibox"><div class="aihdr">AI</div><div class="aians">AI unavailable right now.</div></div>'; }
   };
@@ -1647,7 +1650,9 @@ To keep it on this computer, add a free voice: Windows Settings > Time & languag
     'Also take email from': 'Aceptar también correos de', 'Copy': 'Copiar', 'New address': 'Nueva dirección', 'Save': 'Guardar', 'Emailed in': 'Llegó por correo',
     'File fingerprints': 'Huellas de los archivos', 'Check all files': 'Revisar todos los archivos', 'No fingerprint yet': 'Aún sin huella', 'Emails filed into the case': 'Correos archivados en el caso',
     'Recordings': 'Grabaciones', 'Transcribe': 'Transcribir', 'Transcribe again': 'Transcribir de nuevo', '⬆ Upload a recording': '⬆ Subir una grabación', 'No transcript yet.': 'Aún sin transcripción.', 'No recordings yet.': 'Aún no hay grabaciones.',
-    'Close in meaning': 'Parecido en significado', '🔊 Read page': '🔊 Leer página', '🔊 Read the answer': '🔊 Leer la respuesta', '🔊 Read it': '🔊 Leerla', 'Stop': 'Parar', 'English': 'Inglés', 'Spanish': 'Español', 'Language: work it out': 'Idioma: detectarlo', 'What you said': 'Lo que dijiste',
+    'No page was cited for this answer. Check it against the papers before relying on it.': 'Esta respuesta no cita ninguna página. Revísela con los papeles antes de confiar en ella.',
+    'Dates found in the papers (check each one)': 'Fechas encontradas en los papeles (revise cada una)', '📄 One-page summary': '📄 Resumen de una página',
+    'Close in meaning': 'Parecido en significado','🔊 Read page': '🔊 Leer página', '🔊 Read the answer': '🔊 Leer la respuesta', '🔊 Read it': '🔊 Leerla', 'Stop': 'Parar', 'English': 'Inglés', 'Spanish': 'Español', 'Language: work it out': 'Idioma: detectarlo', 'What you said': 'Lo que dijiste',
   };
   const PH = { 'Search this transcript…': 'Buscar en la transcripción…', 'Paste the text with the citations here': 'Pega aquí el texto con las citas','Search the case, or ask a question…': 'Busca en el caso o haz una pregunta…', 'case code': 'código de caso', 'What is due': 'Qué vence', 'What has to be shown, one per line': 'Lo que hay que probar, uno por línea' };
   let LANG = 'en'; try { LANG = localStorage.getItem('la-lang') === 'es' ? 'es' : 'en'; } catch (e) { }
@@ -1668,5 +1673,21 @@ To keep it on this computer, add a free voice: Windows Settings > Time & languag
   document.body.appendChild(lb); paintLang();
   new MutationObserver(ms => { if (LANG !== 'es') return; ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) trNode(n); else if (n.nodeType === 3 && n.parentElement) trNode(n.parentElement); })); }).observe(document.body, { childList: true, subtree: true });
   trNode(document.body);
+
+  /* ================= ONE-PAGE SUMMARY FOR A VOLUNTEER ================= */
+  // Builds a printable page from the open case (public/brief.mjs): who's who, key events with page links,
+  // calendar dates as entered (nothing calculated), open requests, missing pages. No phone numbers or addresses.
+  const bb = document.getElementById('briefbtn');
+  if (bb) bb.onclick = async () => {
+    if (!CASE) return;
+    const w = window.open('', '_blank'); // opened inside the click so pop-up blockers allow it
+    if (!w) { alert(LANG === 'es' ? 'Permita ventanas emergentes para abrir el resumen.' : 'Allow pop-ups for this site to open the summary.'); return; }
+    w.document.write('<p style="font-family:sans-serif">…</p>');
+    try {
+      const m = await import('/brief.mjs');
+      const html = m.renderBrief(m.buildBrief(CASE, { origin: location.origin, code: CODE }), LANG);
+      w.document.open(); w.document.write(html); w.document.close();
+    } catch (e) { w.document.body.textContent = LANG === 'es' ? 'No se pudo hacer el resumen.' : 'Could not build the summary.'; }
+  };
 
 })();

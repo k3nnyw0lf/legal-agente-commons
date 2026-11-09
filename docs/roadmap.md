@@ -2,6 +2,8 @@
 
 None of this is built yet. Every part follows [access-model.md](access-model.md): only the people on a case see it, and the server checks that on every request. Starter tasks for new helpers are in [starter-issues.md](starter-issues.md).
 
+**Already built (2026-11-08), not part of the list below** (ideas taken from other legal-help tools, made our own way): Ask AI rules enforced in code (cited pages only, a fixed "a lawyer must answer this" notice in English or Spanish), dates found in the papers on the timeline, and a one-page summary for a volunteer. Still to do for these: a lawyer's review of the wording, and a way to mark a found date as checked.
+
 ## 1. Self sign-up and eligibility
 
 A person in Florida signs up, answers a few plain questions, and learns whether the program can help. One question per screen, big buttons, English or Spanish to start (see [Languages](#10-languages)).

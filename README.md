@@ -27,6 +27,8 @@ A Cloudflare Worker app that keeps one case in order:
 - **File fingerprints** (SHA-256) kept in a chained log, so a changed file shows up.
 - **Search** inside every page (words, and by meaning in English and Spanish), OCR for scans, speech to text for recordings.
 - **Citation check** that sends only the citations to CourtListener (Free Law Project).
+- **Dates found in the papers:** every full date written on a page is added to the timeline, linked to that page, for people to check. Nothing is calculated.
+- **One-page summary for a volunteer:** who's who, key events with page links, calendar dates as entered, open requests and missing pages, ready to print. It leaves out phone numbers and addresses.
 - **Email into a case** through private addresses.
 - **Reading aid** (`read-aid.js`) and a Spanish interface.
 - A **fictional sample case**: a Florida debt-collection dispute with six made-up documents (`src/sample-case.js`, `public/cf/sample-debt-ortega/`).
@@ -37,7 +39,7 @@ See [docs/architecture.md](docs/architecture.md) for a map of the files.
 
 The AI organizes and finds. **It never gives legal advice.**
 
-- "Ask AI" answers only from the case file and says that a lawyer must answer questions about what to do.
+- "Ask AI" answers only from the case file and the pages it was given. The server enforces this in code: it removes any page number the AI was not given, flags an answer that cites no page, and adds a fixed notice (English or Spanish) when a question asks what to do. The AI answers in the language of the question.
 - "Find dates & people" lists what a document says.
 - "Rewrite with AI" (drafting discovery answers) is **off** unless a deployment sets `AI_DRAFTING = "on"`. A lawyer decides whether it stays.
 
@@ -95,7 +97,7 @@ Herramientas abiertas y gratis para que la gente en Florida ponga su caso legal 
 
 **Por qué:** la ayuda legal gratis existe, pero está dispersa y es difícil de alcanzar. Los voluntarios pierden horas ordenando papeles antes de poder aconsejar. Un expediente en orden cambia eso.
 
-**Qué hay aquí:** una aplicación que pone un caso en orden: acceso seguro (contraseña, código de 6 dígitos y llaves de acceso), cronología, mapa de personas, dinero, leyes, mapa de pruebas, documentos con visor, huellas de los archivos, búsqueda en cada página (también por significado, en inglés y español), revisión de citas, correo al caso, ayuda de lectura e interfaz en español. Incluye un caso de ejemplo inventado: una disputa de cobro de deudas en Florida.
+**Qué hay aquí:** una aplicación que pone un caso en orden: acceso seguro (contraseña, código de 6 dígitos y llaves de acceso), cronología, mapa de personas, dinero, leyes, mapa de pruebas, documentos con visor, huellas de los archivos, búsqueda en cada página (también por significado, en inglés y español), revisión de citas, fechas encontradas en los papeles (cada una con su página), resumen de una página para el voluntario, correo al caso, ayuda de lectura e interfaz en español. Incluye un caso de ejemplo inventado: una disputa de cobro de deudas en Florida.
 
 **La IA organiza y encuentra. Nunca da consejo legal.** La función que redacta respuestas está apagada a menos que un abogado decida encenderla.
 

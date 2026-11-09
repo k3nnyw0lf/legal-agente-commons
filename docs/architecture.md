@@ -19,6 +19,8 @@ Main parts of `src/index.js`, top to bottom:
 - **Owner-only items.** `ownerView()`; uploads, email and text marked "owner" never reach a lawyer view.
 - **File fingerprints.** Every file's SHA-256 goes into a D1 table where each row is chained to the one before (`evRecord`, `/api/evidence`, `/api/admin/evidence-chain`).
 - **Citation check.** `citeFind()` finds case citations in text; only the citations are sent to CourtListener.
+- **Ask AI rules in code** (`src/grounding.js`). `checkCites()` keeps only page numbers the AI was given and marks answers with none; `adviceAsked()` adds a fixed notice (English or Spanish) when a question asks what to do.
+- **Dates found in the papers** (`src/paper-dates.js`). `/api/case` adds a timeline phase with every full date written on a page, linked to that page, skipping dates already on the timeline for the same file.
 - **Email into a case.** Two private addresses per case (`in-<token>@<MAIL_DOMAIN>`): one shared with the lawyer view, one owner-only. Only people on the case (or senders the owner lists) can send to them.
 - **Search by meaning.** Workers AI embeddings (`@cf/baai/bge-m3`), stored small (int8) in KV.
 - **Recordings to text.** The browser sends a few minutes at a time to Workers AI Whisper.
@@ -36,6 +38,7 @@ Main parts of `src/index.js`, top to bottom:
 | `admin.html` | Invites, cases, access log, backups, settings. |
 | `app.html` | The case screen: tabs, map, timeline, money, letters, portals, fees, requests, responses, notes, search. |
 | `app-plus.js` | Adds the web graph, document search, exhibit binder, viewer, zoomable timeline, charts, overview, proof map, deadlines, requests with uploads, fingerprints, email in, citation checks, search by meaning, recordings, read aloud, talk, and Spanish. |
+| `brief.mjs` | The one-page summary for a volunteer (no DOM, also used by the tests). Opened from the "📄 One-page summary" button. |
 | `read-aid.js` | Reading aid: bigger text, spacing, a reading ruler. |
 | `la.css` | Shared look for the public pages. |
 | `vendor/` | Libraries, at fixed versions. See `THIRD_PARTY_NOTICES.md`. |
