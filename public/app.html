@@ -34,6 +34,9 @@ header{padding:12px 56px 12px 20px;border-bottom:1px solid var(--line);display:f
 .crumb{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:13px;color:var(--faint)}
 .hubbtn{background:none;border:1px solid var(--line);color:var(--soft);border-radius:0;padding:5px 10px;font-size:14.5px;cursor:pointer;font-family:var(--mono)}
 .hubbtn:hover{border-color:var(--accent);color:var(--ink)}
+.hubcheck{display:inline-flex;gap:8px;align-items:center;min-height:44px;font-size:15px;color:#b1b4b6;cursor:pointer}
+.hubcheck input{width:22px;height:22px;margin:0}
+.hubmsg{font-size:15px;color:#fff}
 header .title{font-family:var(--serif);font-size:21.5px;font-weight:600}
 header .cn{font-family:var(--mono);font-size:13px;color:var(--faint)}
 .tabs{margin-left:auto;display:flex;gap:9px;flex-wrap:wrap}
@@ -475,7 +478,7 @@ header .cn{color:#b1b4b6;font-size:16px}
 
 <div id="app">
   <header>
-    <div class="crumb"><button class="hubbtn" id="lockbtn">◂ cases</button><span>Legal Agente</span><span>/</span><span id="crumbcase"></span><button class="hubbtn" id="briefbtn" title="One page a volunteer can read or print">📄 One-page summary</button></div>
+    <div class="crumb"><button class="hubbtn" id="lockbtn">◂ cases</button><span>Legal Agente</span><span>/</span><span id="crumbcase"></span><button class="hubbtn" id="briefbtn" title="One page a volunteer can read or print">📄 One-page summary</button><button class="hubbtn" id="binderbtn" title="A PDF a lawyer can use at once: cover, index with page numbers, summary, timeline and every paper">📦 Lawyer-ready binder</button><label class="hubcheck"><input type="checkbox" id="bindercontacts"> Include phone numbers and addresses</label><span class="hubmsg" id="bindermsg" role="status" aria-live="polite"></span></div>
     <span class="title" id="hTitle"></span>
     <span class="cn" id="hCn"></span>
   </header>

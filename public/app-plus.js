@@ -1651,6 +1651,7 @@ To keep it on this computer, add a free voice: Windows Settings > Time & languag
     'File fingerprints': 'Huellas de los archivos', 'Check all files': 'Revisar todos los archivos', 'No fingerprint yet': 'Aún sin huella', 'Emails filed into the case': 'Correos archivados en el caso',
     'Recordings': 'Grabaciones', 'Transcribe': 'Transcribir', 'Transcribe again': 'Transcribir de nuevo', '⬆ Upload a recording': '⬆ Subir una grabación', 'No transcript yet.': 'Aún sin transcripción.', 'No recordings yet.': 'Aún no hay grabaciones.',
     'No page was cited for this answer. Check it against the papers before relying on it.': 'Esta respuesta no cita ninguna página. Revísela con los papeles antes de confiar en ella.',
+    '📦 Lawyer-ready binder': '📦 Carpeta lista para el abogado', 'Include phone numbers and addresses': 'Incluir teléfonos y direcciones',
     'Add to my calendar': 'Agregar a mi calendario',
     'Add all checked dates to my calendar (one file)': 'Agregar todas las fechas revisadas a mi calendario (un archivo)',
     'I checked this date against the page': 'Revisé esta fecha con la página',
@@ -1730,6 +1731,26 @@ To keep it on this computer, add a free voice: Windows Settings > Time & languag
       if (head) { head.after(note); note.after(tools); } else { box.prepend(tools); box.prepend(note); }
     }
     if (LANG === 'es') trNode(view);
+  };
+
+  /* ================= LAWYER-READY BINDER (one tap) ================= */
+  // A PDF made on this device from the case file (public/binder.mjs): cover, index with page numbers, the one-page
+  // summary, the timeline and every paper. No phone numbers or addresses unless the box next to the button is ticked.
+  const lbb = document.getElementById('binderbtn');
+  if (lbb) lbb.onclick = async () => {
+    if (!CASE) return;
+    const msg = document.getElementById('bindermsg'), es = LANG === 'es';
+    lbb.disabled = true; msg.textContent = es ? 'Haciendo la carpeta…' : 'Making the binder…';
+    try {
+      const m = await import('/binder.mjs'); await loadScript('/vendor/pdf-lib-1.17.1.min.js');
+      let docs = {}; try { docs = await store('datechecks'); } catch (e) { }
+      const plan = m.planBinder(CASE, { lang: LANG, includeContacts: document.getElementById('bindercontacts').checked, isChecked: ev => !!(docs[dcId(ev)] && docs[dcId(ev)].text) });
+      const r = await m.renderBinder(PDFLib, plan, h => bytes(h));
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([r.bytes], { type: 'application/pdf' })); a.download = m.binderFileName(plan);
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+      msg.textContent = es ? 'Lista: ' + r.total + ' páginas.' : 'Done: ' + r.total + ' pages.';
+    } catch (e) { msg.textContent = (es ? 'No se pudo hacer la carpeta: ' : 'Could not make the binder: ') + (e && e.message || e); }
+    lbb.disabled = false;
   };
 
   /* ================= ONE-PAGE SUMMARY FOR A VOLUNTEER ================= */

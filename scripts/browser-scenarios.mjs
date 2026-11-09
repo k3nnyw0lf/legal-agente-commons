@@ -232,6 +232,30 @@ export const SCENARIOS = {
     await page.shot("04-found-dates-375", false);
   },
 
+  async "lawyer-ready binder: one tap makes a PDF with an index and page numbers; phones and addresses are off"(page) {
+    await openSample(page);
+    await page.eval(`(()=>{window.__pdf=[];const o=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){if(this.download){const n=this.download;fetch(this.href).then(r=>r.arrayBuffer()).then(b=>{let s='';const u=new Uint8Array(b);for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));window.__pdf.push({name:n,b64:btoa(s),size:u.length})});return}return o.call(this)};return 1})()`);
+    assert.equal(await page.eval("document.getElementById('bindercontacts').checked"), false, "phones and addresses are off by default");
+    await page.click("#binderbtn");
+    await page.waitFor("window.__pdf.length === 1", 60000);
+    const pdf = await page.eval("({name:window.__pdf[0].name,size:window.__pdf[0].size})");
+    assert.match(pdf.name, /lawyer-ready binder.*\.pdf$/);
+    assert.match(await text(page, "#bindermsg"), /Done: \d+ pages/);
+    const b64 = await page.eval("window.__pdf[0].b64");
+    const bytes = Buffer.from(b64, "base64");
+    assert.equal(bytes.subarray(0, 5).toString(), "%PDF-");
+    // Draw the cover, the index and the summary with the PDF reader the app already uses.
+    await page.eval(`(async()=>{const pj=await import('/vendor/pdfjs-6.5.438.min.mjs');pj.GlobalWorkerOptions.workerSrc='/vendor/pdfjs-6.5.438.worker.min.mjs';
+      const d=await pj.getDocument({data:Uint8Array.from(atob(window.__pdf[0].b64),c=>c.charCodeAt(0)),wasmUrl:'/vendor/pdfjs-6.5.438/wasm/',standardFontDataUrl:'/vendor/pdfjs-6.5.438/standard_fonts/'}).promise;
+      window.__pages=d.numPages;document.body.innerHTML='<div id="pp" style="display:flex;gap:8px;flex-wrap:wrap;background:#888;padding:8px"></div>';
+      for(const n of [1,2,3,d.numPages]){const pg=await d.getPage(n);const vp=pg.getViewport({scale:.9});const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;document.getElementById('pp').appendChild(c);await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise}return 1})()`);
+    const n = await page.eval("window.__pages");
+    assert.ok(n >= 12, "pages: " + n);
+    await page.resize(1700, 1100, false);
+    await page.shot("05-binder-pages", false);
+    await page.resize(375, 812);
+  },
+
   async "the Spanish switch translates the new strings"(page) {
     await openSample(page);
     await page.click("#la-lang");
