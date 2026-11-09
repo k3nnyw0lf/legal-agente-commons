@@ -8,7 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SKIP_DIRS = new Set([".git", "node_modules", ".wrangler"]);
+const SKIP_DIRS = new Set([".git", "node_modules", ".wrangler", "graphify-out"]); // the last one: a code-map tool's output, git-ignored
 const VENDOR = /[\\/]vendor[\\/]/;
 const BINARY = /\.(pdf|png|jpe?g|gif|wasm|pfb|ttf|ico)$/i;
 const SELF = path.join(ROOT, "scripts", "check-clean.mjs");

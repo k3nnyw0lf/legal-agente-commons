@@ -130,6 +130,12 @@ test("the one-page summary has the key facts, links with the case code, and no p
   assert.match(es, /<html lang="es">/);
 });
 
+test("the Spanish one-page summary writes calendar dates with Spanish month names", () => {
+  const b = buildBrief(SAMPLE, { origin: "https://example.org", code: OWNER });
+  assert.match(renderBrief(b, "es"), /12 nov\.? 2026/i);
+  assert.match(renderBrief(b, "en"), /12 Nov 2026/);
+});
+
 test("the one-page summary escapes what it shows", () => {
   const b = buildBrief({ title: "<img src=x onerror=alert(1)>Case", nodes: { a: { nm: 'Tom & "Jerry" <3', rl: "x" } }, timeline: [] });
   const h = renderBrief(b, "en");

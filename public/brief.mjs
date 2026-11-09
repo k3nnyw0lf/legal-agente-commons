@@ -30,7 +30,7 @@ const L = {
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const strip = s => String(s == null ? "" : s).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 const when = d => { const t = Date.parse(d); return isNaN(t) ? 9e15 : t; };
-const isoLabel = iso => { const t = Date.parse(iso + "T00:00:00Z"); return isNaN(t) ? String(iso) : new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }); };
+const isoLabel = (iso, lang = "en") => { const t = Date.parse(iso + "T00:00:00Z"); return isNaN(t) ? String(iso) : new Date(t).toLocaleDateString(lang === "es" ? "es-US" : "en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }); };
 
 // Links into the case's own files need the case code; everything else stays as it is.
 function linker(CASE, origin, code) {
@@ -100,7 +100,7 @@ ${sec(T.contact, b.contactNote ? `<p>${esc(b.contactNote)}</p>` : "")}
 </div>
 ${sec(T.events, ul(b.events, e => `<b>${esc(e.d)}</b> ${e.flag === "!" ? '<span class="flag">⚠</span> ' : e.flag === "*" ? '<span class="flag">★</span> ' : ""}${esc(e.t)}${e.src ? ` <span class="src">(${a(e.href, e.src)})</span>` : ""}`) + (b.found ? `<p class="muted">${esc(T.found(b.found))}</p>` : ""))}
 <div class="cols">
-${sec(T.calendar, ul(b.calendar, c => `<b>${esc(c.label)}</b> ${esc(c.what)}${c.confirm ? ` <span class="src">(${esc(T.confirm)})</span>` : ""}`))}
+${sec(T.calendar, ul(b.calendar, c => `<b>${esc(/^\d{4}-\d{2}-\d{2}$/.test(c.d) ? isoLabel(c.d, lang) : c.label)}</b> ${esc(c.what)}${c.confirm ? ` <span class="src">(${esc(T.confirm)})</span>` : ""}`))}
 ${sec(T.money, ul(b.money, m => `<b>${esc(m.amount)}</b> ${esc(m.note)}`))}
 </div>
 ${sec(T.letters, ul(b.letters, l => `<b>${esc(l.date)}</b> ${esc(l.title)} <span class="src">(${esc(l.dir === "sent" ? T.sent : T.received)}; ${esc(l.party)})</span><br>${esc(l.body)}`))}
