@@ -88,6 +88,7 @@ The same note shows in Spanish when the screen is in Spanish (**En una emergenci
 
 ## Helpers and scores
 
+- **Trained before the first case.** A helper must pass the [volunteer training](volunteer-training.md) (privacy, the no-advice line, conflicts) before they can open any case or file. The server enforces it. The training text is a draft for counsel review.
 - **Checked before the first match.** A helper's identity, and any license they list, are checked before they are matched to any case: lawyers through the Florida Bar's public member search, notaries through their commission. Until then they see no previews.
 - Each offer has three one-tap answers: **Accept**, **Not now**, **Not this type**. None of them lowers a score. "Not this type" updates the helper's profile so they stop getting that kind of task.
 - Skipping a card in the helper app counts as "Not now". It never lowers a score either.

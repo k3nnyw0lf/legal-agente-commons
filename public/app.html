@@ -549,7 +549,7 @@ async function unlock(){
     const r=await fetch('/api/case',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code})});
     const d=await r.json();
     if(d.ok){ CASE=d.case; CODE=code; openCase(); }
-    else { err.textContent=d.error||'No case matches that code.'; ci.value=''; ci.focus(); }
+    else { err.textContent=d.error||'No case matches that code.'; if(d.training){const a=document.createElement('a');a.href='/training';a.textContent=' → /training';a.style.color='inherit';err.appendChild(a);} ci.value=''; ci.focus(); }
   }catch(e){ err.textContent='Network error — try again.'; }
   enter.disabled=false; enter.textContent='Open';
 }

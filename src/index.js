@@ -12,6 +12,8 @@ import { adviceAsked, isSpanish, checkCites, ADVICE_NOTICE } from "./grounding.j
 import { paperDates, PAPER_DATES_PHASE } from "./paper-dates.js";
 // Pro bono hours tracker: checks one entry, adds up a year.
 import { cleanEntry, totals as hoursTotals } from "../public/hours.mjs";
+// Volunteer training and quiz gate (the answer key stays on the server).
+import { TRAINING, scoreQuiz, publicTraining, QUESTIONS } from "../public/training.mjs";
 
 const CASES = SAMPLE_CASES;
 
@@ -119,6 +121,9 @@ async function readStore(env, ns, slug) {
 // Each line is who, when, and what (opened the case, opened a file, added a file, used Ask AI, cut off or let back in).
 // No address of the person's device is kept in it. Nothing can edit a line; lines go only by age (LOG_DAYS, 90 by default).
 const LOG_DAYS_DEFAULT = 90;
+// A helper cannot open a case until they pass the training (administrators, who run the deployment, are not asked).
+// On unless a deployment sets TRAINING_REQUIRED = "off".
+function trainingRequired(env) { return String(env && env.TRAINING_REQUIRED || "on").toLowerCase() !== "off"; }
 function logDays(env) { const n = Number(env && env.LOG_DAYS); return n >= 1 && n <= 3650 ? Math.floor(n) : LOG_DAYS_DEFAULT; }
 function caseView(env, ctx, user, c, action, what, throttle = true) {
   if (!env.DB || !user || !c) return;
@@ -572,6 +577,24 @@ const __app = {
       for (const r of rows) if (!last[r.who]) last[r.who] = r.ts;
       helpers.forEach(h => { h.lastSeen = last[h.email] || null; });
       return json({ ok: true, keepDays: days, logAvailable, helpers, entries: rows.slice(0, 200).map(r => ({ ts: r.ts, who: r.who, role: r.role, action: r.action, what: r.what || "" })) });
+    }
+
+    // --- volunteer training: the text and questions (no answers), and the quiz. Passing is recorded on the person's login. ---
+    if (url.pathname === "/api/training") {
+      const me = laUser(request); if (!me) return json({ ok: false, error: "Please sign in." }, 401);
+      const user = await __getUser(env, me.email);
+      const st = user && user.trained && user.trained.v === TRAINING.version ? { trained: true, at: user.trained.at, score: user.trained.score, version: TRAINING.version } : { trained: false };
+      if (request.method === "GET") return json({ ok: true, ...publicTraining(), required: trainingRequired(env) && me.role !== "admin", status: st, role: me.role });
+      if (request.method === "POST") {
+        if (!__sameOrigin(request, url)) return json({ ok: false, error: "Bad request." }, 403);
+        let body; try { body = await request.json(); } catch { return json({ ok: false, error: "Bad request." }, 400); }
+        const a = body && body.answers && typeof body.answers === "object" ? body.answers : {};
+        if (!QUESTIONS.every(q => Number.isInteger(a[q.id]))) return json({ ok: false, error: "Answer every question." }, 400);
+        const r = scoreQuiz(a);
+        if (r.passed && user) { user.trained = { v: TRAINING.version, at: new Date().toISOString(), score: r.score }; await env.COMMENTS.put("auth:user:" + me.email, JSON.stringify(user)); }
+        return json({ ok: true, score: r.score, total: r.total, passed: r.passed, criticalWrong: r.criticalWrong, wrong: r.wrong.map(id => { const q = QUESTIONS.find(x => x.id === id); return { id, correct: q.answer, why: q.why }; }) });
+      }
+      return json({ ok: false, error: "Method not allowed." }, 405);
     }
 
     // --- pro bono hours: each signed-in helper keeps their own; nobody else reads them, and no score or match uses them ---
@@ -1582,6 +1605,10 @@ export default {
     }
     // A person the owner cut off stays out, even if their login still lists the case code.
     const lc = reqCode ? caseByCode(reqCode) : null;
+    if (reqCode && user.role !== "admin" && trainingRequired(env) && !(user.trained && user.trained.v === TRAINING.version) && (__CODE_ROUTES.has(u.pathname) || u.pathname.startsWith("/cf/"))) {
+      if (u.pathname.startsWith("/cf/")) return new Response("Locked", { status: 403, headers: __PRIVATE_HEADERS });
+      return __authJson({ ok: false, training: true, error: "Before you can open a case, the volunteer training must be finished (about 15 minutes). / Antes de abrir un caso, hay que terminar la capacitación de voluntarios (unos 15 minutos). Open /training." }, 403);
+    }
     if (lc && user.role !== "admin" && (await env.COMMENTS.get("block:" + baseSlug(lc.slug) + ":" + user.email))) {
       if (u.pathname.startsWith("/cf/")) return new Response("Locked", { status: 403, headers: __PRIVATE_HEADERS });
       return __authJson({ ok: false, error: "The owner of this case cut off your access." }, 403);

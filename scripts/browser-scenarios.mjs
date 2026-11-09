@@ -333,6 +333,43 @@ export const SCENARIOS = {
     assert.match(await text(page, "#hr-bar-text"), /Regla 4-6.1/);
   },
 
+  async "volunteer training: a helper is stopped at the door, takes the quiz on a phone, and then the case opens"(page) {
+    const { QUESTIONS } = await import("../public/training.mjs");
+    const h = await page.helperLogin("trainee@example.org");
+    page.env.TRAINING_REQUIRED = "on";
+    try {
+      h.use();
+      await page.resize(375, 812);
+      await page.goto("/app");
+      await page.eval("localStorage.clear()"); await page.goto("/app");
+      // the app tries to open the helper's only case, and the gate says why it cannot
+      await page.waitFor("document.getElementById('err').innerText.includes('training')", 15000);
+      assert.match(await text(page, "#err"), /capacitación/);
+      assert.equal(await page.eval("!!document.querySelector('#err a[href=\"/training\"]')"), true, "a link to the training");
+      await page.goto("/training");
+      await page.waitFor("document.querySelectorAll('#tr-form fieldset').length === 10");
+      assert.match(await text(page, ".draft"), /DRAFT FOR COUNSEL REVIEW/);
+      assert.equal(await page.eval("document.documentElement.scrollWidth <= innerWidth"), true, "fits the phone");
+      await page.shot("08-training-375", false);
+      // every question answered with the first option: fails, and the missed ones are marked with the right answer
+      await page.eval("document.querySelectorAll('#tr-form fieldset').forEach(f=>f.querySelector('input').click())");
+      await page.click("#tr-form button[type=submit]");
+      await page.waitFor("document.getElementById('tr-msg').textContent.startsWith('Not yet')");
+      assert.ok(await page.eval("document.querySelectorAll('fieldset.wrong .why').length > 0"), "missed questions show the right answer");
+      assert.equal((await page.eval("fetch('/api/case',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:'22222222'})}).then(r=>r.status)")), 403, "still stopped");
+      // the right answers: passes
+      for (const q of QUESTIONS) await page.eval(`document.querySelector('fieldset[data-id="${q.id}"] input[value="${q.answer}"]').click()`);
+      await page.click("#tr-form button[type=submit]");
+      await page.waitFor("document.getElementById('tr-status').textContent.includes('You passed')");
+      await page.click('.lang button[data-set="es"]');
+      await page.waitFor("document.querySelector('.draft').innerText.includes('BORRADOR')");
+      await page.click('.lang button[data-set="en"]');
+      assert.equal((await page.eval("fetch('/api/case',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:'22222222'})}).then(r=>r.status)")), 200, "passed: the case opens");
+      await page.goto("/app");
+      await page.waitFor("document.getElementById('app').style.display === 'flex'", 15000);
+    } finally { h.restore(); page.env.TRAINING_REQUIRED = "off"; }
+  },
+
   async "the Spanish switch translates the new strings"(page) {
     await openSample(page);
     await page.click("#la-lang");

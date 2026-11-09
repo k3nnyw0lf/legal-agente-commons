@@ -28,6 +28,7 @@ Main parts of `src/index.js`, top to bottom:
 - **The app** (`__app.fetch`): `/api/case`, `/api/ask`, `/api/rewrite`, `/api/store`, `/api/upload`, `/api/text`, `/api/text-add`, `/api/meaning`, `/api/transcribe`, `/api/transcript`, `/api/evidence`, `/api/evidence/check`, `/api/cite-check`, `/api/mailin`, `/api/extract`, `/api/case-edit`, `/api/comments`, and hosted files under `/cf/<slug>/`.
 - **Sign-in** (`__authRoutes`): password (PBKDF2-SHA256, 100,000 rounds), 2-step codes (RFC 6238) with one-time backup codes, passkeys, invites, a short "setup window" for the first admin, sign out everywhere, private calendar link.
 - **Who opened my file** (`/api/who-opened`, `/api/case-access`; table `case_views`). Every view of a case is written down (who, when, what, no device address) and the owner reads it; the owner can cut a helper off with one tap. Lines are deleted after `LOG_DAYS` (90 by default), when read and every night.
+- **Volunteer training gate** (`/api/training`, and a check in the entry point). A helper cannot open a case or a file until they pass; administrators are exempt; `TRAINING_REQUIRED = "off"` turns it off for a deployment.
 - **Pro bono hours** (`/api/hours`). Each signed-in helper's own entries in KV `hours:<email>`; add, change, delete, list by year. Nobody else can read them.
 - **Admin** (`/api/admin/*`): invites, users, add or delete a case, access log, backups, settings, fingerprint-log check.
 - **Entry point** (`export default`): public pages, sign-in gate, case-code check for invited people, access logging, nightly backup (cron), incoming email.
@@ -47,6 +48,7 @@ Main parts of `src/index.js`, top to bottom:
 | `calendar-file.mjs`, `calendar-save.mjs` | **Add to my calendar.** Builds a calendar file (.ics) for dates a person checked against the paper, and saves it on the device. No invitations, no email or audio alarms, no network calls; each event says the court's paper is what counts. Used by the letter page and by "Dates found in the papers" in the case timeline (each found date has a box to tick, kept in the case's `datechecks` store). |
 | `binder.mjs` | **Lawyer-ready binder.** One tap in the case bar makes a PDF on the device: cover, index with page numbers, the one-page summary (built on `brief.mjs`), the timeline, and every PDF and photo in the case, each page marked "Binder page N of M". Phone numbers, email addresses and street addresses are left out unless the person ticks "Include phone numbers and addresses" (the papers are added as they are). Draws with the vendored pdf-lib; the tests read the page numbers back out of the finished PDF. |
 | `hours.html`, `hours.js`, `hours.mjs` | **My pro bono hours** (signed in). A helper logs time per case and downloads a year-end report (spreadsheet file or printable page). Private to the helper, never used in a score or a match. See [pro-bono-hours.md](pro-bono-hours.md). |
+| `training.html`, `training.js`, `training.mjs` | **Volunteer training and quiz** (signed in). Three short parts and a 10-question quiz. The answer key stays on the server; passing is recorded on the person's login and opens cases. **DRAFT for counsel review.** See [volunteer-training.md](volunteer-training.md). |
 | `read-aid.js` | Reading aid: bigger text, spacing, a reading ruler. |
 | `la.css` | Shared look for the public pages. |
 | `vendor/` | Libraries, at fixed versions. See `THIRD_PARTY_NOTICES.md`. |
@@ -66,6 +68,7 @@ Main parts of `src/index.js`, top to bottom:
 | `ADMIN_EMAILS` | Comma-separated emails that may create an admin login during the setup window. |
 | `PASSKEY_RP_ID`, `PUBLIC_ORIGIN` | The site name passkeys belong to, and its full address. |
 | `MAIL_DOMAIN` | The domain that receives case email. |
+| `TRAINING_REQUIRED` | `"on"` (default): helpers must pass the volunteer training before they open a case. `"off"` turns the gate off. |
 | `LOG_DAYS` | How many days the access logs are kept. Default 90. |
 | `AI_DRAFTING` | `"on"` turns on "Rewrite with AI" for discovery answers. Off by default. |
 | `COURTLISTENER_TOKEN` (secret) | Optional. Can also be saved from the admin page. |

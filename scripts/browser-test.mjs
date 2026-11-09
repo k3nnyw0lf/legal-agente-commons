@@ -40,6 +40,16 @@ async function toWorker(method, p, headers, body) {
   const sc = res.headers.get("set-cookie"); if (sc) jar = sc.split(";")[0];
   return res;
 }
+// A second person in the same browser: an invited helper (not an administrator). Returns { use(), restore() }.
+export async function helperLogin(email = "helper@example.org", code = "22222222") {
+  const admin = jar, tok = [...Array(24)].map((_, i) => ((i * 7 + 3) % 256).toString(16).padStart(2, "0")).join("");
+  await env.COMMENTS.put("auth:invite:" + tok, JSON.stringify({ email, role: "counsel", codes: [code], by: "admin@example.org", created: new Date().toISOString(), expires: Date.now() + 864e5 }));
+  jar = "";
+  const r = await toWorker("POST", "/api/auth/setup", { "content-type": "application/json", "x-invite": "1" }, JSON.stringify({ invite: tok, password: "a long test password 1" }));
+  if (r.status !== 200) throw new Error("helper setup failed: " + await r.text());
+  const helper = jar; jar = admin;
+  return { use() { jar = helper; }, restore() { jar = admin; } };
+}
 export async function signIn(email = "admin@example.org", password = "a long test password 1", code = "11111111") {
   await env.COMMENTS.put("auth:setup_until", String(Date.now() + 60000));
   const r = await toWorker("POST", "/api/auth/setup", { "content-type": "application/json" }, JSON.stringify({ email, password, code }));
@@ -99,7 +109,7 @@ export async function startBrowser() {
     }
   });
   const page = {
-    problems, requests, out: OUT, env,
+    problems, requests, out: OUT, env, helperLogin,
     async resize(width, height, mobile = true, scale = 1) { await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: scale, mobile }); },
     async goto(p) { await send("Page.navigate", { url: /^(https?|data):/.test(p) ? p : ORIGIN + p }); await this.waitFor("document.readyState === 'complete'", 20000); },
     async eval(expr) {

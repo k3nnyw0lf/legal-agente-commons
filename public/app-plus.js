@@ -783,7 +783,7 @@
     const foot = document.querySelector('#gate .gatefoot');
     if (foot) {
       const who = document.createElement('div'); who.style.marginTop = '8px';
-      who.innerHTML = 'Signed in as ' + E(st.email) + (st.role === 'admin' ? ' · <a href="/admin" style="color:inherit;text-underline-offset:3px">Admin: who can open what</a>' : '') + ' · <a href="/hours" style="color:inherit;text-underline-offset:3px">My pro bono hours</a>';
+      who.innerHTML = 'Signed in as ' + E(st.email) + (st.role === 'admin' ? ' · <a href="/admin" style="color:inherit;text-underline-offset:3px">Admin: who can open what</a>' : '') + ' · <a href="/training" style="color:inherit;text-underline-offset:3px">Volunteer training</a> · <a href="/hours" style="color:inherit;text-underline-offset:3px">My pro bono hours</a>';
       foot.appendChild(who);
     }
     // A lawyer invited to exactly one case goes straight into it.
@@ -1651,7 +1651,7 @@ To keep it on this computer, add a free voice: Windows Settings > Time & languag
     'File fingerprints': 'Huellas de los archivos', 'Check all files': 'Revisar todos los archivos', 'No fingerprint yet': 'Aún sin huella', 'Emails filed into the case': 'Correos archivados en el caso',
     'Recordings': 'Grabaciones', 'Transcribe': 'Transcribir', 'Transcribe again': 'Transcribir de nuevo', '⬆ Upload a recording': '⬆ Subir una grabación', 'No transcript yet.': 'Aún sin transcripción.', 'No recordings yet.': 'Aún no hay grabaciones.',
     'No page was cited for this answer. Check it against the papers before relying on it.': 'Esta respuesta no cita ninguna página. Revísela con los papeles antes de confiar en ella.',
-    'My pro bono hours': 'Mis horas de servicio legal gratuito',
+    'My pro bono hours': 'Mis horas de servicio legal gratuito', 'Volunteer training': 'Capacitación de voluntarios',
     'Who opened my file': 'Quién abrió mi expediente',
     'Every time someone opens this case or one of its files, it is written here. Nobody can change or erase these lines. Lines are kept for': 'Cada vez que alguien abre este caso o uno de sus archivos, queda escrito aquí. Nadie puede cambiar ni borrar estas líneas. Las líneas se guardan por',
     'days, then deleted.': 'días y luego se borran.',

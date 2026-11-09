@@ -47,7 +47,7 @@ export function r2() {
 
 // Just enough of D1 for the statements the worker uses.
 export function d1() {
-  const t = { access_log: [], evidence: [], case_views: [], hours: [] };
+  const t = { access_log: [], evidence: [], case_views: [] };
   const run = (sql, args) => {
     const s = sql.replace(/\s+/g, " ").trim();
     if (s.startsWith("INSERT INTO access_log")) { const [ts, email, ip, action, detail] = args; t.access_log.push({ id: t.access_log.length + 1, ts, email, ip, action, detail }); return []; }
@@ -78,7 +78,7 @@ export function makeEnv(extra = {}) {
   return {
     COMMENTS: kv(), ASSETS: assets(), FILES: r2(), DB: d1(),
     AI: { _calls: calls, async run(model, input) { calls.push({ model, input }); return { response: "A test answer from the mock AI." }; } },
-    ADMIN_EMAILS: "admin@example.org", MAIL_DOMAIN: "mail.example.org",
+    ADMIN_EMAILS: "admin@example.org", MAIL_DOMAIN: "mail.example.org", TRAINING_REQUIRED: "off", // the training gate has its own tests (tests/training.test.mjs)
     ...extra,
   };
 }

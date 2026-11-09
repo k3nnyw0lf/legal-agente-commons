@@ -31,6 +31,7 @@ A Cloudflare Worker app that keeps one case in order:
 - **What is this letter?** A public page (`/letter`): a photo of a letter goes through OCR on the phone, and the helper says what kind of paper it is, which dates are on it (each next to its piece of the photo) and who can help, from an approved list. It never says what to do. Social Security numbers are blacked out before anything is saved. See [docs/letter-check.md](docs/letter-check.md).
 - **One-page summary for a volunteer:** who's who, key events with page links, calendar dates as entered, open requests and missing pages, ready to print. It leaves out phone numbers and addresses.
 - **Who opened my file:** the owner of a case sees every view (who, when, what, no device addresses), kept 90 days, and can cut off any helper with one tap.
+- **Volunteer training and quiz:** a 15-minute training (privacy, the no-advice line, conflicts) and a quiz. A helper cannot open a case until they pass. **Draft for counsel review.** See [docs/volunteer-training.md](docs/volunteer-training.md).
 - **My pro bono hours:** helpers log time per case and download a year-end report. Private to the helper; never a score. See [docs/pro-bono-hours.md](docs/pro-bono-hours.md).
 - **Lawyer-ready binder:** one tap makes a PDF with a cover, an index with page numbers, the summary, the timeline and every paper in the case. No phone numbers or addresses unless the person turns them on.
 - **Email into a case** through private addresses.
