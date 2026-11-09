@@ -256,6 +256,39 @@ export const SCENARIOS = {
     await page.resize(375, 812);
   },
 
+  async "who opened my file: the owner sees a helper's views and cuts them off with one tap"(page) {
+    const { default: worker } = await import("../src/index.js"), { client } = await import("../tests/helpers.mjs");
+    const tok = "ab".repeat(24);
+    await page.env.COMMENTS.put("auth:invite:" + tok, JSON.stringify({ email: "helper@example.org", role: "counsel", codes: ["22222222"], by: "admin@example.org", created: new Date().toISOString(), expires: Date.now() + 864e5 }));
+    const l = client(worker, page.env);
+    assert.equal((await l.post("/api/auth/setup", { invite: tok, password: "a long test password 1" }, { "X-Invite": "1" })).status, 200);
+    assert.equal((await l.post("/api/case", { code: "22222222" })).status, 200);
+    await l.ctx.done();
+    await openSample(page);
+    await page.click('.tab[data-view="access"]');
+    await page.waitFor("document.querySelector('#access-view .acc-row[data-email=\"helper@example.org\"]')");
+    const t = await text(page, "#access-view");
+    assert.match(t, /Every time someone opens this case/);
+    assert.match(t, /helper@example.org/);
+    assert.match(t, /opened the case/);
+    assert.match(t, /Administrator \(can open every case in this program today\)/);
+    assert.ok(!/d{1,3}.d{1,3}.d{1,3}.d{1,3}/.test(t), "no device addresses on screen");
+    assert.equal(await page.eval(`document.documentElement.scrollWidth <= innerWidth`), true, "fits the phone");
+    const btn = '#access-view .acc-row[data-email="helper@example.org"] button';
+    assert.equal(await page.eval(`document.querySelector('${btn}').getBoundingClientRect().height >= 44`), true, "big enough to tap");
+    await page.shot("06-who-opened-375", false);
+    await page.click(btn);                       // one tap
+    await page.waitFor("document.querySelector('#access-view .acc-row[data-email=\"helper@example.org\"]').innerText.includes('Let back in')");
+    assert.equal((await l.post("/api/case", { code: "22222222" })).status, 403, "the helper is out at once");
+    assert.match(await text(page, "#access-view"), /cut off access for helper@example.org/);
+    await page.click("#la-lang");
+    await page.waitFor("document.getElementById('access-view').innerText.includes('Permitir de nuevo')", 8000);
+    await page.click("#la-lang");
+    await page.click(btn);                       // and back in
+    await page.waitFor("document.querySelector('#access-view .acc-row[data-email=\"helper@example.org\"]').innerText.includes('Cut off access')");
+    assert.equal((await l.post("/api/case", { code: "22222222" })).status, 200);
+  },
+
   async "the Spanish switch translates the new strings"(page) {
     await openSample(page);
     await page.click("#la-lang");

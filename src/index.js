@@ -113,6 +113,46 @@ async function readStore(env, ns, slug) {
   return raw ? JSON.parse(raw) : {};
 }
 
+// ==== Who opened my file: a short-lived log the owner of a case can read, and a one-tap cut-off for any helper ====
+// Each line is who, when, and what (opened the case, opened a file, added a file, used Ask AI, cut off or let back in).
+// No address of the person's device is kept in it. Nothing can edit a line; lines go only by age (LOG_DAYS, 90 by default).
+const LOG_DAYS_DEFAULT = 90;
+function logDays(env) { const n = Number(env && env.LOG_DAYS); return n >= 1 && n <= 3650 ? Math.floor(n) : LOG_DAYS_DEFAULT; }
+function caseView(env, ctx, user, c, action, what, throttle = true) {
+  if (!env.DB || !user || !c) return;
+  const p = (async () => {
+    const slug = baseSlug(c.slug), w = String(what || "").slice(0, 120);
+    if (throttle) { // the same person doing the same thing is one line per ten minutes
+      const k = "cvt:" + (await __sha(slug + "|" + user.email + "|" + action + "|" + w)).slice(0, 40);
+      if (await env.COMMENTS.get(k)) return;
+      await env.COMMENTS.put(k, "1", { expirationTtl: 600 });
+    }
+    await env.DB.prepare("INSERT INTO case_views (ts,slug,who,role,action,what) VALUES (?,?,?,?,?,?)").bind(new Date().toISOString(), slug, user.email, user.role, action, w).run();
+  })().catch(() => { });
+  if (ctx && ctx.waitUntil) ctx.waitUntil(p);
+}
+async function purgeLogs(env) {
+  if (!env.DB) return;
+  const cutoff = new Date(Date.now() - logDays(env) * 864e5).toISOString();
+  for (const sql of ["DELETE FROM case_views WHERE ts < ?", "DELETE FROM access_log WHERE ts < ?"]) { try { await env.DB.prepare(sql).bind(cutoff).run(); } catch { } }
+}
+// Everyone who can open a case today: invited people whose invite names it, administrators (who can open every case; listed so the owner sees them), and people already cut off.
+async function caseHelpers(env, bs) {
+  const out = [], list = async (prefix, f) => { let cursor; do { const r = await env.COMMENTS.list({ prefix, cursor }); for (const k of r.keys) await f(k.name); cursor = r.list_complete ? null : r.cursor; } while (cursor); };
+  await list("auth:user:", async name => {
+    const u = JSON.parse((await env.COMMENTS.get(name)) || "null"); if (!u) return;
+    if (u.role === "admin") { out.push({ email: u.email, role: "admin", canCut: false, blocked: false }); return; }
+    for (const code of u.codes || []) { await loadDyn(env, code); const cc = caseByCode(code); if (cc && baseSlug(cc.slug) === bs) { out.push({ email: u.email, role: u.role, canCut: true, blocked: false }); return; } }
+  });
+  const pre = "block:" + bs + ":";
+  await list(pre, async name => {
+    const email = name.slice(pre.length), rec = JSON.parse((await env.COMMENTS.get(name)) || "{}"), have = out.find(x => x.email === email);
+    if (have) have.blocked = true; else out.push({ email, role: "counsel", canCut: true, blocked: true });
+    (have || out[out.length - 1]).since = rec.ts || null;
+  });
+  return out;
+}
+
 // ==== Added 5 Nov 2026: who sees owner-only items, file fingerprints, citation checks, email into a case ====
 
 // Owner-only items (mail sent to the case's private address) show only to an admin in the owner's own view,
@@ -512,7 +552,56 @@ const __app = {
         if (found.length) data.timeline = (data.timeline || []).concat([{ phase: PAPER_DATES_PHASE, auto: true, events: found }]);
       } catch { }
       data.dynamic = !CASES[String(body.code).trim()] && !COUNSEL_CODES[String(body.code).trim()];
+      data.isOwner = ownerView(request, c); // the screen shows "Who opened my file" only in the owner's view
       return json({ ok: true, slug: c.slug, case: data });
+    }
+
+    // --- who opened my file: the owner reads the log of their own case ---
+    if (url.pathname === "/api/who-opened" && request.method === "POST") {
+      let body; try { body = await request.json(); } catch { return json({ ok: false, error: "Bad request." }, 400); }
+      const c = caseByCode(body.code);
+      if (!c) return json({ ok: false, error: "Locked." }, 403);
+      if (!ownerView(request, c)) return json({ ok: false, error: "Only the owner of this case can see who opened it." }, 403);
+      const bs = baseSlug(c.slug), days = logDays(env);
+      await purgeLogs(env);
+      let rows = [], logAvailable = true;
+      try { rows = (await env.DB.prepare("SELECT ts,who,role,action,what FROM case_views WHERE slug=? AND ts>=? ORDER BY id DESC LIMIT 500").bind(bs, new Date(Date.now() - days * 864e5).toISOString()).all()).results || []; } catch { logAvailable = false; }
+      const helpers = await caseHelpers(env, bs), last = {};
+      for (const r of rows) if (!last[r.who]) last[r.who] = r.ts;
+      helpers.forEach(h => { h.lastSeen = last[h.email] || null; });
+      return json({ ok: true, keepDays: days, logAvailable, helpers, entries: rows.slice(0, 200).map(r => ({ ts: r.ts, who: r.who, role: r.role, action: r.action, what: r.what || "" })) });
+    }
+
+    // --- cut a helper off, or let them back in (owner only; one tap each) ---
+    if (url.pathname === "/api/case-access" && request.method === "POST") {
+      let body; try { body = await request.json(); } catch { return json({ ok: false, error: "Bad request." }, 400); }
+      const c = caseByCode(body.code);
+      if (!c) return json({ ok: false, error: "Locked." }, 403);
+      const me = laUser(request);
+      if (!ownerView(request, c)) return json({ ok: false, error: "Only the owner of this case can do this." }, 403);
+      const action = String(body.action || ""), email = String(body.email || "").trim().toLowerCase(), bs = baseSlug(c.slug);
+      if (action !== "cut" && action !== "allow") return json({ ok: false, error: "Unknown action." }, 400);
+      const user = email ? await __getUser(env, email) : null;
+      const blockKey = "block:" + bs + ":" + email;
+      if (action === "cut") {
+        if (!user) return json({ ok: false, error: "No login with that email." }, 404);
+        if (user.role === "admin") return json({ ok: false, error: "Administrators cannot be cut off here." }, 400);
+        const removed = [];
+        for (const code of user.codes || []) { await loadDyn(env, code); const cc = caseByCode(code); if (cc && baseSlug(cc.slug) === bs) removed.push(code); }
+        if (!removed.length && !(await env.COMMENTS.get(blockKey))) return json({ ok: false, error: "That person is not on this case." }, 404);
+        user.codes = (user.codes || []).filter(x => !removed.includes(x));
+        await env.COMMENTS.put("auth:user:" + email, JSON.stringify(user));
+        const old = JSON.parse((await env.COMMENTS.get(blockKey)) || "{}");
+        await env.COMMENTS.put(blockKey, JSON.stringify({ by: me.email, ts: new Date().toISOString(), removed: [...new Set([...(old.removed || []), ...removed])] }));
+        caseView(env, ctx, me, c, "access_cut", email, false);
+        return json({ ok: true });
+      }
+      const rec = JSON.parse((await env.COMMENTS.get(blockKey)) || "null");
+      if (!rec) return json({ ok: false, error: "That person was not cut off." }, 404);
+      if (user) { user.codes = [...new Set([...(user.codes || []), ...(rec.removed || [])])]; await env.COMMENTS.put("auth:user:" + email, JSON.stringify(user)); }
+      await env.COMMENTS.delete(blockKey);
+      caseView(env, ctx, me, c, "access_allowed", email, false);
+      return json({ ok: true });
     }
 
     // --- AI: answer a question grounded in the case file (code-gated) ---
@@ -971,7 +1060,7 @@ const __PUBLIC = new Set(["/", "/login", "/setup", "/read-aid.js", "/la.css", "/
 // Passkeys belong to one site name: PASSKEY_RP_ID and PUBLIC_ORIGIN in the settings (default: the address the request came to).
 function __pkFor(env, url) { return { rpID: String(env.PASSKEY_RP_ID || url.hostname), origin: String(env.PUBLIC_ORIGIN || url.origin) }; }
 if (typeof globalThis.SubtleCrypto === "undefined" && globalThis.crypto && crypto.subtle) globalThis.SubtleCrypto = crypto.subtle.constructor; // the passkey library looks for it
-const __CODE_ROUTES = new Set(["/api/case", "/api/ask", "/api/rewrite", "/api/store", "/api/comments", "/api/upload", "/api/text", "/api/text-add", "/api/extract", "/api/case-edit", "/api/evidence", "/api/evidence/check", "/api/cite-check", "/api/mailin", "/api/meaning", "/api/transcribe", "/api/transcript"]);
+const __CODE_ROUTES = new Set(["/api/case", "/api/ask", "/api/rewrite", "/api/store", "/api/comments", "/api/upload", "/api/text", "/api/text-add", "/api/extract", "/api/case-edit", "/api/evidence", "/api/evidence/check", "/api/cite-check", "/api/mailin", "/api/meaning", "/api/transcribe", "/api/transcript", "/api/who-opened", "/api/case-access"]);
 function __allowedCode(user, code) {
   if (!user) return false;
   if (user.role === "admin") return true;
@@ -1313,7 +1402,9 @@ async function __authRoutes(request, env, url, ctx) {
       if (env.FILES) { let cur; do { const l = await env.FILES.list({ prefix: "cases/" + slug + "/", cursor: cur }); for (const o of l.objects) await env.FILES.delete(o.key); cur = l.truncated ? l.cursor : null; } while (cur); }
       const mcfg = JSON.parse((await env.COMMENTS.get("mailcfg:" + slug)) || "{}");
       for (const t of [mcfg.shared, mcfg.owner]) if (t) await env.COMMENTS.delete("mailin:" + t);
-      for (const k of ["case:" + code, "uploads:" + slug, "text:" + slug, "textp:" + slug, "vec:" + slug, "vecp:" + slug, "tx:" + slug, "mail:" + slug, "mailcfg:" + slug, "proof:" + slug, "deadlines:" + slug, "docreqs:" + slug, "comments:" + slug]) await env.COMMENTS.delete(k);
+      for (const k of ["case:" + code, "uploads:" + slug, "text:" + slug, "textp:" + slug, "vec:" + slug, "vecp:" + slug, "tx:" + slug, "mail:" + slug, "mailcfg:" + slug, "proof:" + slug, "deadlines:" + slug, "docreqs:" + slug, "datechecks:" + slug, "comments:" + slug]) await env.COMMENTS.delete(k);
+      { let cur; do { const l = await env.COMMENTS.list({ prefix: "block:" + slug + ":", cursor: cur }); for (const k of l.keys) await env.COMMENTS.delete(k.name); cur = l.list_complete ? null : l.cursor; } while (cur); }
+      if (env.DB) { try { await env.DB.prepare("DELETE FROM case_views WHERE slug=?").bind(slug).run(); } catch { } }
       __log(env, ctx, request, me.email, "case deleted", rec.data.title + " (" + code + ")");
       return __authJson({ ok: true });
     }
@@ -1375,7 +1466,7 @@ async function __authRoutes(request, env, url, ctx) {
 // Daily backup (cron, 08:00 UTC): logins, added cases, notes, boards, uploads lists and uploaded text → private bucket. Keeps 30 days.
 async function __backup(env) {
   if (!env.FILES) return null;
-  const prefixes = ["auth:user:", "auth:pk:", "case:", "uploads:", "text:", "textp:", "tx:", "mail:", "mailcfg:", "mailin:", "comments:", "responses:", "requests:", "answers:", "layout:", "proof:", "deadlines:", "docreqs:"];
+  const prefixes = ["auth:user:", "auth:pk:", "case:", "uploads:", "text:", "textp:", "tx:", "mail:", "mailcfg:", "mailin:", "comments:", "responses:", "requests:", "answers:", "layout:", "proof:", "deadlines:", "docreqs:", "datechecks:", "block:"];
   const out = { made: new Date().toISOString(), keys: {} };
   for (const pf of prefixes) { let cursor; do { const r = await env.COMMENTS.list({ prefix: pf, cursor }); for (const k of r.keys) out.keys[k.name] = await env.COMMENTS.get(k.name); cursor = r.list_complete ? null : r.cursor; } while (cursor); }
   const key = "backups/" + new Date().toISOString().slice(0, 10) + ".json";
@@ -1454,16 +1545,23 @@ export default {
         }
       }
     }
-    if (u.pathname === "/api/case" && request.method === "POST" && reqCode) __log(env, ctx, request, user.email, "opened case", reqCode);
-    if (u.pathname.startsWith("/cf/") && request.method === "GET" && !/_text\.json$|_audio\.json$/.test(u.pathname)) { const rg = request.headers.get("range") || ""; if (!rg || /^bytes=0-/.test(rg)) __log(env, ctx, request, user.email, "opened file", decodeURIComponent(u.pathname.split("/").slice(3).join("/")).slice(0, 250)); }
-    if (u.pathname === "/api/upload") __log(env, ctx, request, user.email, "uploaded", (u.searchParams.get("name") || "") + " → " + reqCode);
+    // A person the owner cut off stays out, even if their login still lists the case code.
+    const lc = reqCode ? caseByCode(reqCode) : null;
+    if (lc && user.role !== "admin" && (await env.COMMENTS.get("block:" + baseSlug(lc.slug) + ":" + user.email))) {
+      if (u.pathname.startsWith("/cf/")) return new Response("Locked", { status: 403, headers: __PRIVATE_HEADERS });
+      return __authJson({ ok: false, error: "The owner of this case cut off your access." }, 403);
+    }
+    if (u.pathname === "/api/case" && request.method === "POST" && reqCode) { __log(env, ctx, request, user.email, "opened case", reqCode); caseView(env, ctx, user, lc, "case_opened", ""); }
+    if (u.pathname.startsWith("/cf/") && request.method === "GET" && !/_text.json$|_audio.json$/.test(u.pathname)) { const rg = request.headers.get("range") || ""; if (!rg || /^bytes=0-/.test(rg)) { const fp = decodeURIComponent(u.pathname.split("/").slice(3).join("/")).slice(0, 250); __log(env, ctx, request, user.email, "opened file", fp); caseView(env, ctx, user, lc, "file_opened", fp.split("/").pop().replace(/^d{4}-d{2}-d{2}-[a-f0-9]{8}-/, "")); } }
+    if (u.pathname === "/api/upload") { __log(env, ctx, request, user.email, "uploaded", (u.searchParams.get("name") || "") + " → " + reqCode); caseView(env, ctx, user, lc, "file_added", (u.searchParams.get("name") || "").slice(0, 120), false); }
+    if (u.pathname === "/api/ask" && request.method === "POST") caseView(env, ctx, user, lc, "ask_ai", "");
     const fh = new Headers(request.headers); fh.set("X-LA-User", user.email + "|" + user.role);
     const res = await __app.fetch(new Request(request, { headers: fh }), env, ctx);
     const h = new Headers(res.headers);
     for (const [k, v] of Object.entries(__PRIVATE_HEADERS)) h.set(k, v);
     return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
   },
-  async scheduled(event, env, ctx) { ctx.waitUntil(__backup(env)); },
+  async scheduled(event, env, ctx) { ctx.waitUntil(__backup(env)); ctx.waitUntil(purgeLogs(env)); },
   // Email Routing sends mail for *@<MAIL_DOMAIN> here. Only "in-<token>@" addresses of a case are taken,
   // only from people on that case (or senders the owner listed); everything else is turned away.
   async email(message, env, ctx) {

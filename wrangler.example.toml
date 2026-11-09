@@ -37,6 +37,8 @@ PASSKEY_RP_ID = "localhost"
 PUBLIC_ORIGIN = "http://localhost:8787"
 MAIL_DOMAIN = "mail.example.org"
 AI_DRAFTING = "off"
+# How many days the access logs are kept (default 90).
+LOG_DAYS = "90"
 
 # Nightly backup of logins, notes, requests and added cases to the private bucket (08:00 UTC).
 [triggers]

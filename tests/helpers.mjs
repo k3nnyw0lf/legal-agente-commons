@@ -47,7 +47,7 @@ export function r2() {
 
 // Just enough of D1 for the statements the worker uses.
 export function d1() {
-  const t = { access_log: [], evidence: [] };
+  const t = { access_log: [], evidence: [], case_views: [], hours: [] };
   const run = (sql, args) => {
     const s = sql.replace(/\s+/g, " ").trim();
     if (s.startsWith("INSERT INTO access_log")) { const [ts, email, ip, action, detail] = args; t.access_log.push({ id: t.access_log.length + 1, ts, email, ip, action, detail }); return []; }
@@ -57,6 +57,11 @@ export function d1() {
     if (s === "SELECT sha256,ts FROM evidence WHERE slug=? AND h=? ORDER BY id LIMIT 1") return t.evidence.filter(r => r.slug === args[0] && r.h === args[1]).slice(0, 1);
     if (s === "SELECT id,slug,h,name,size,sha256,ts,by,prev,row FROM evidence ORDER BY id") return t.evidence.slice();
     if (s === "SELECT ts,email,ip,action,detail FROM access_log ORDER BY id DESC LIMIT 300") return t.access_log.slice().reverse();
+    if (s === "INSERT INTO case_views (ts,slug,who,role,action,what) VALUES (?,?,?,?,?,?)") { const [ts, slug, who, role, action, what] = args; t.case_views.push({ id: t.case_views.length + 1, ts, slug, who, role, action, what }); return []; }
+    if (s === "SELECT ts,who,role,action,what FROM case_views WHERE slug=? AND ts>=? ORDER BY id DESC LIMIT 500") return t.case_views.filter(r => r.slug === args[0] && r.ts >= args[1]).reverse().slice(0, 500);
+    if (s === "DELETE FROM case_views WHERE ts < ?") { t.case_views = t.case_views.filter(r => !(r.ts < args[0])); return []; }
+    if (s === "DELETE FROM access_log WHERE ts < ?") { t.access_log = t.access_log.filter(r => !(r.ts < args[0])); return []; }
+    if (s === "DELETE FROM case_views WHERE slug=?") { t.case_views = t.case_views.filter(r => r.slug !== args[0]); return []; }
     throw new Error("mock D1 does not know: " + s);
   };
   const stmt = (sql, args = []) => ({

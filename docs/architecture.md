@@ -27,6 +27,7 @@ Main parts of `src/index.js`, top to bottom:
 - **Recordings to text.** The browser sends a few minutes at a time to Workers AI Whisper.
 - **The app** (`__app.fetch`): `/api/case`, `/api/ask`, `/api/rewrite`, `/api/store`, `/api/upload`, `/api/text`, `/api/text-add`, `/api/meaning`, `/api/transcribe`, `/api/transcript`, `/api/evidence`, `/api/evidence/check`, `/api/cite-check`, `/api/mailin`, `/api/extract`, `/api/case-edit`, `/api/comments`, and hosted files under `/cf/<slug>/`.
 - **Sign-in** (`__authRoutes`): password (PBKDF2-SHA256, 100,000 rounds), 2-step codes (RFC 6238) with one-time backup codes, passkeys, invites, a short "setup window" for the first admin, sign out everywhere, private calendar link.
+- **Who opened my file** (`/api/who-opened`, `/api/case-access`; table `case_views`). Every view of a case is written down (who, when, what, no device address) and the owner reads it; the owner can cut a helper off with one tap. Lines are deleted after `LOG_DAYS` (90 by default), when read and every night.
 - **Admin** (`/api/admin/*`): invites, users, add or delete a case, access log, backups, settings, fingerprint-log check.
 - **Entry point** (`export default`): public pages, sign-in gate, case-code check for invited people, access logging, nightly backup (cron), incoming email.
 
@@ -53,7 +54,7 @@ Main parts of `src/index.js`, top to bottom:
 
 - **KV `COMMENTS`**: logins, invites, added cases, notes, editable boards, upload lists, text index, email settings, settings.
 - **R2 `FILES`**: uploaded and emailed files (`cases/<slug>/…`) and nightly backups.
-- **D1 `DB`**: `access_log` and `evidence` tables. See `schema.sql`.
+- **D1 `DB`**: `access_log`, `case_views` and `evidence` tables. See `schema.sql`.
 - **Workers AI `AI`**: Ask AI, find dates and people, search by meaning, speech to text.
 
 ## Settings (`[vars]`)
@@ -63,5 +64,6 @@ Main parts of `src/index.js`, top to bottom:
 | `ADMIN_EMAILS` | Comma-separated emails that may create an admin login during the setup window. |
 | `PASSKEY_RP_ID`, `PUBLIC_ORIGIN` | The site name passkeys belong to, and its full address. |
 | `MAIL_DOMAIN` | The domain that receives case email. |
+| `LOG_DAYS` | How many days the access logs are kept. Default 90. |
 | `AI_DRAFTING` | `"on"` turns on "Rewrite with AI" for discovery answers. Off by default. |
 | `COURTLISTENER_TOKEN` (secret) | Optional. Can also be saved from the admin page. |

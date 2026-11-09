@@ -109,7 +109,8 @@ Be honest about the gap. Today's code came from a one-person app, so:
 - **An admin can open every case.** That breaks the rule above. It must change before any real case is added.
 - Invited people (role `counsel`) open only the case codes on their invite. That part is close to a per-case list.
 - A "lawyer view" code shows the same case without some tabs. That is a view, not an access list.
-- The access log exists (D1 table `access_log`), but only admins can read it. The client cannot see it yet.
+- **Who opened my file (built 2026-11-09).** The owner of a case sees, in the case screen, every time someone opened the case, opened a file, added a file, used Ask AI, or was cut off or let back in: who, when, what. The log lives in D1 table `case_views`. It keeps **no address of anyone's device**, it never holds the case code, and nothing can edit a line. Lines are **short-lived**: deleted after `LOG_DAYS` (90 by default) when the log is read and every night. The owner can **cut off any invited helper with one tap** (and let them back in with one tap). The cut-off works at once, on every route and every file, and it holds even if the helper's login still lists the case code. Administrators are listed but cannot be cut off here: see the next point.
+- The older admin log (D1 table `access_log`, with device addresses, for tech staff) is also deleted after `LOG_DAYS`. The owner cannot read it.
 - There is no authorized-representative or health-helper role, no health compartment, no notified-helper preview, no task, no automatic end of access.
 - Preferences (reading aid, read-aloud speed, online-voice answer, theme) are kept in each browser's local storage, not on the account.
 - Case codes are a second key on top of sign-in. They are not a replacement for an access list.
@@ -140,3 +141,5 @@ These need a Florida lawyer's answer before real cases. Nothing here is decided.
 2. **Consent when someone else brings a case:** what record of the person's consent is enough, and what proof should the program ask of a guardian or an agent under a power of attorney?
 3. **Safe-harbor wording** for security researchers in [SECURITY.md](../SECURITY.md): is it right for a Florida nonprofit?
 4. **Health compartment:** which health-privacy rules apply to notes that health helpers make in this program, and what must the person's written consent say before a health note moves into the legal file?
+5. **How long to keep the access log.** "Who opened my file" keeps lines 90 days, then deletes them (short-lived on purpose, so the log is not itself a record of private activity). Is 90 days right? Does a lawyer's duty to keep records, a legal hold, or a dispute about who saw a paper need a longer period for some cases?
+6. **The owner and "the client".** Today the owner of a case is an administrator of the deployment. Until a self sign-up client account exists, who reads the log and who can cut a helper off for a real client?

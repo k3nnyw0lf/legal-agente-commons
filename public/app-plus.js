@@ -1651,6 +1651,17 @@ To keep it on this computer, add a free voice: Windows Settings > Time & languag
     'File fingerprints': 'Huellas de los archivos', 'Check all files': 'Revisar todos los archivos', 'No fingerprint yet': 'Aún sin huella', 'Emails filed into the case': 'Correos archivados en el caso',
     'Recordings': 'Grabaciones', 'Transcribe': 'Transcribir', 'Transcribe again': 'Transcribir de nuevo', '⬆ Upload a recording': '⬆ Subir una grabación', 'No transcript yet.': 'Aún sin transcripción.', 'No recordings yet.': 'Aún no hay grabaciones.',
     'No page was cited for this answer. Check it against the papers before relying on it.': 'Esta respuesta no cita ninguna página. Revísela con los papeles antes de confiar en ella.',
+    'Who opened my file': 'Quién abrió mi expediente',
+    'Every time someone opens this case or one of its files, it is written here. Nobody can change or erase these lines. Lines are kept for': 'Cada vez que alguien abre este caso o uno de sus archivos, queda escrito aquí. Nadie puede cambiar ni borrar estas líneas. Las líneas se guardan por',
+    'days, then deleted.': 'días y luego se borran.',
+    'People who can open this case': 'Personas que pueden abrir este caso',
+    'Cut off access': 'Cortar el acceso', 'Let back in': 'Permitir de nuevo', 'Cut off': 'Acceso cortado',
+    'Helper': 'Ayudante', 'Administrator (can open every case in this program today)': 'Administrador (hoy puede abrir todos los casos de este programa)',
+    'last opened': 'último acceso', 'never': 'nunca', 'What happened': 'Qué pasó',
+    'Nothing has been written yet.': 'Todavía no hay nada escrito.',
+    'opened the case': 'abrió el caso', 'opened a file': 'abrió un archivo', 'added a file': 'agregó un archivo', 'used Ask AI': 'usó Preguntar a la IA', 'cut off access for': 'cortó el acceso de', 'let back in:': 'permitió de nuevo a',
+    'Cutting off takes effect at once. The person can be let back in with one tap.': 'El corte es inmediato. Se puede permitir de nuevo a la persona con un toque.',
+    'The log is not available on this deployment.': 'El registro no está disponible en esta instalación.',
     '📦 Lawyer-ready binder': '📦 Carpeta lista para el abogado', 'Include phone numbers and addresses': 'Incluir teléfonos y direcciones',
     'Add to my calendar': 'Agregar a mi calendario',
     'Add all checked dates to my calendar (one file)': 'Agregar todas las fechas revisadas a mi calendario (un archivo)',
@@ -1731,6 +1742,62 @@ To keep it on this computer, add a free voice: Windows Settings > Time & languag
       if (head) { head.after(note); note.after(tools); } else { box.prepend(tools); box.prepend(note); }
     }
     if (LANG === 'es') trNode(view);
+  };
+
+  /* ================= WHO OPENED MY FILE ================= */
+  // The owner sees every view of the case (who, when, what; no device addresses) and can cut off any helper with one tap.
+  // Lines are kept for a short time only (the server says how long). Lines are never edited.
+  window.accessView = async function () {
+    const v = document.getElementById('access-view'); if (!v) return;
+    v.innerHTML = '<h2 class="mhead">Who opened my file</h2><p class="mnote">…</p>';
+    let d; try { const r = await fetch('/api/who-opened', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: CODE }) }); d = await r.json(); } catch (e) { d = { ok: false, error: 'Network error.' }; }
+    const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+    if (!d.ok) { v.replaceChildren(mk('h2', 'mhead', 'Who opened my file'), mk('p', 'mnote', d.error || '')); return; }
+    const when = ts => { const t = new Date(ts); return isNaN(t) ? ts : t.toLocaleString(LANG === 'es' ? 'es-US' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }); };
+    const ACT = { case_opened: 'opened the case', file_opened: 'opened a file', file_added: 'added a file', ask_ai: 'used Ask AI', access_cut: 'cut off access for', access_allowed: 'let back in:' };
+    v.replaceChildren();
+    v.append(mk('h2', 'mhead', 'Who opened my file'));
+    const intro = mk('p', 'mnote');
+    intro.append(mk('span', '', 'Every time someone opens this case or one of its files, it is written here. Nobody can change or erase these lines. Lines are kept for'), document.createTextNode(' '), mk('b', '', String(d.keepDays)), document.createTextNode(' '), mk('span', '', 'days, then deleted.'));
+    v.append(intro);
+    if (!d.logAvailable) v.append(mk('p', 'mnote', 'The log is not available on this deployment.'));
+    v.append(mk('h3', '', 'People who can open this case'));
+    const status = mk('p', 'la-muted'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+    const people = mk('div', 'acc-people');
+    const act = async (h, action) => {
+      const r = await fetch('/api/case-access', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: CODE, action, email: h.email }) });
+      const j = await r.json(); status.textContent = '';
+      if (!j.ok) { status.textContent = j.error || ''; return; }
+      window.accessView();
+    };
+    for (const h of d.helpers) {
+      const row = mk('div', 'acc-row'); row.dataset.email = h.email; row.style.cssText = 'border:1px solid var(--line);padding:12px 14px;margin:0 0 10px;max-width:720px;display:grid;gap:6px';
+      const em = mk('div', '', h.email); em.style.cssText = 'font-size:18px;font-weight:700;word-break:break-all';
+      row.append(em, mk('div', 'la-muted', h.role === 'admin' ? 'Administrator (can open every case in this program today)' : 'Helper'));
+      const ls = mk('div', 'la-muted'); ls.append(mk('span', '', 'last opened'), document.createTextNode(': '));
+      if (h.lastSeen) ls.append(document.createTextNode(when(h.lastSeen))); else ls.append(mk('span', '', 'never'));
+      row.append(ls);
+      if (h.canCut) {
+        if (h.blocked) { const c = mk('div', '', 'Cut off'); c.style.fontWeight = '700'; row.append(c); }
+        const b = mk('button', 'btn' + (h.blocked ? '' : ' pri'), h.blocked ? 'Let back in' : 'Cut off access'); b.style.cssText = 'min-height:44px;font-size:17px;justify-self:start';
+        b.onclick = () => { b.disabled = true; act(h, h.blocked ? 'allow' : 'cut'); };
+        row.append(b);
+      }
+      people.append(row);
+    }
+    v.append(people, status, mk('p', 'la-muted', 'Cutting off takes effect at once. The person can be let back in with one tap.'));
+    v.append(mk('h3', '', 'What happened'));
+    if (!d.entries.length) v.append(mk('p', 'mnote', 'Nothing has been written yet.'));
+    const list = mk('div', 'acc-log');
+    for (const e of d.entries) {
+      const row = mk('div', 'acc-line'); row.style.cssText = 'border-top:1px solid var(--line);padding:9px 0;max-width:720px';
+      row.append(mk('div', 'la-muted', when(e.ts)));
+      const line = mk('div', ''); line.append(mk('b', '', e.who), document.createTextNode(' '), mk('span', '', ACT[e.action] || e.action));
+      if (e.what) line.append(document.createTextNode(' ' + e.what));
+      row.append(line); list.append(row);
+    }
+    v.append(list);
+    if (LANG === 'es') trNode(v);
   };
 
   /* ================= LAWYER-READY BINDER (one tap) ================= */

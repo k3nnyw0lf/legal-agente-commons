@@ -25,3 +25,17 @@ CREATE TABLE IF NOT EXISTS evidence (
   row TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS evidence_slug_h ON evidence (slug, h);
+
+-- Who opened a case (the owner of the case can read their own case's lines). No address of the person's device is kept here.
+-- action is one of: case_opened, file_opened, file_added, ask_ai, access_cut, access_allowed.
+-- Short-lived: lines older than LOG_DAYS (90 by default) are deleted when the log is read and every night.
+CREATE TABLE IF NOT EXISTS case_views (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  who TEXT NOT NULL,
+  role TEXT,
+  action TEXT NOT NULL,
+  what TEXT
+);
+CREATE INDEX IF NOT EXISTS case_views_slug_ts ON case_views (slug, ts);

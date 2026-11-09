@@ -484,7 +484,7 @@ header .cn{color:#b1b4b6;font-size:16px}
   </header>
   <div class="stage">
     <nav class="tabs side" role="tablist" id="tabs" aria-label="Case sections">
-      <div class="tgroup"><span class="tglabel">start</span><button class="tab on" data-view="home">Overview</button><button class="tab" data-view="search">🔍 Ask AI</button></div>
+      <div class="tgroup"><span class="tglabel">start</span><button class="tab on" data-view="home">Overview</button><button class="tab" data-view="search">🔍 Ask AI</button><button class="tab" data-view="access">Who opened my file</button></div>
       <div class="tgroup"><span class="tglabel">story</span><button class="tab" data-view="timeline">Timeline</button><button class="tab" data-view="net">Map</button><button class="tab" data-view="web">Web</button><button class="tab" data-view="money">Money</button><button class="tab" data-view="laws">Laws &amp; rules</button><button class="tab" data-view="proof">Proof</button></div>
       <div class="tgroup"><span class="tglabel">evidence</span><button class="tab" data-view="files">Case files</button><button class="tab" data-view="audio">Audio</button><button class="tab" data-view="letters">Letters</button><button class="tab" data-view="portals">Filings &amp; portals</button><button class="tab" data-view="responses">Responses</button></div>
       <div class="tgroup"><span class="tglabel">work</span><button class="tab" data-view="docreqs">Requests</button><button class="tab" data-view="cites">Check citations</button><button class="tab" data-view="requests">Counsel's requests</button><button class="tab" data-view="invest">Investigations</button><button class="tab" data-view="fees">Counsel &amp; fees</button><button class="tab" data-view="notes">Notes</button></div>
@@ -518,6 +518,7 @@ header .cn{color:#b1b4b6;font-size:16px}
     <div class="scroll-view" id="requests-view"></div>
     <div class="scroll-view" id="responses-view"></div>
     <div class="scroll-view" id="notes-view"></div>
+    <div class="scroll-view" id="access-view"></div>
     <aside class="panel" id="panel" aria-live="polite"></aside>
   </div>
 </div>
@@ -565,7 +566,7 @@ function openCase(){
   document.querySelectorAll('.tab').forEach(t=>{if(!t.dataset.orig)t.dataset.orig=t.textContent;const tl=(CASE.tabLabels||{})[t.dataset.view];t.textContent=tl||t.dataset.orig;});
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===0));
   const has=(x)=>Array.isArray(x)?x.length>0:!!x;
-  const empty={files:!CASE.files,audio:!CASE.audio&&!(window.laHasAudio&&window.laHasAudio()),invest:!CASE.invest,responses:!CASE.responses,letters:!has(CASE.letters),portals:!has(CASE.portals),fees:!CASE.fees,requests:!(CASE.requests&&has(CASE.requests.rows)),laws:!CASE.laws,money:!has(CASE.money),web:!Object.keys(CASE.nodes||{}).length,net:!Object.keys(CASE.nodes||{}).length};
+  const empty={access:!CASE.isOwner,files:!CASE.files,audio:!CASE.audio&&!(window.laHasAudio&&window.laHasAudio()),invest:!CASE.invest,responses:!CASE.responses,letters:!has(CASE.letters),portals:!has(CASE.portals),fees:!CASE.fees,requests:!(CASE.requests&&has(CASE.requests.rows)),laws:!CASE.laws,money:!has(CASE.money),web:!Object.keys(CASE.nodes||{}).length,net:!Object.keys(CASE.nodes||{}).length};
   document.querySelectorAll('.tab').forEach(t=>{const v=t.dataset.view;t.style.display=(empty[v]||(CASE.hideTabs||[]).includes(v))?'none':'';});
   document.querySelectorAll('.tgroup').forEach(g=>{g.style.display=[...g.querySelectorAll('.tab')].some(t=>t.style.display!=='none')?'':'none';});
   SEL=null;
@@ -1030,7 +1031,7 @@ function search(){
 }
 
 /* ---- view switching ---- */
-const VIEWS=['home','proof','docreqs','cites','search','timeline','money','laws','letters','portals','files','web','audio','invest','fees','requests','responses','notes'];
+const VIEWS=['access','home','proof','docreqs','cites','search','timeline','money','laws','letters','portals','files','web','audio','invest','fees','requests','responses','notes'];
 function showView(v){
   document.getElementById('net-view').style.display=(v==='net')?'block':'none';
   document.getElementById('panel').style.display=(v==='net')?'block':'none';
@@ -1053,6 +1054,7 @@ function showView(v){
   if(v==='responses')responses();
   if(v==='search')search();
   if(v==='notes')loadNotes();
+  if(v==='access'&&window.accessView)accessView();
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));

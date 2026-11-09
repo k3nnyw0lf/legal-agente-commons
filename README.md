@@ -30,6 +30,7 @@ A Cloudflare Worker app that keeps one case in order:
 - **Dates found in the papers:** every full date written on a page is added to the timeline, linked to that page, for people to check. Nothing is calculated. Each date has a box to tick once checked against the page, and a button that saves a calendar file on the person's own device ("Add to my calendar"). Nothing is sent: no texts, no emails.
 - **What is this letter?** A public page (`/letter`): a photo of a letter goes through OCR on the phone, and the helper says what kind of paper it is, which dates are on it (each next to its piece of the photo) and who can help, from an approved list. It never says what to do. Social Security numbers are blacked out before anything is saved. See [docs/letter-check.md](docs/letter-check.md).
 - **One-page summary for a volunteer:** who's who, key events with page links, calendar dates as entered, open requests and missing pages, ready to print. It leaves out phone numbers and addresses.
+- **Who opened my file:** the owner of a case sees every view (who, when, what, no device addresses), kept 90 days, and can cut off any helper with one tap.
 - **Lawyer-ready binder:** one tap makes a PDF with a cover, an index with page numbers, the summary, the timeline and every paper in the case. No phone numbers or addresses unless the person turns them on.
 - **Email into a case** through private addresses.
 - **Reading aid** (`read-aid.js`) and a Spanish interface.
