@@ -83,7 +83,7 @@ const data = {
     ] },
     { phase: "Collection", events: [
       { d: "9 Mar 2026", t: "Example Credit Recovery dates a collection letter asking for $1,842.17, including $200.00 it calls fees.", s: "Doc 1, page 1", u: doc(1), f: "*" },
-      { d: "12 Mar 2026", t: "Lucia receives the letter (postmark on the envelope).", s: "Doc 1, page 2", u: doc(1) + "#page=2" },
+      { d: "12 Mar 2026", t: "Lucia receives the letter (her note on the envelope says so; the postmark is 10 Mar 2026).", s: "Doc 1, page 2", u: doc(1) + "#page=2" },
       { d: "20 Mar 2026", t: "Lucia mails a written dispute by certified mail and asks for proof of the debt.", s: "Doc 2, page 1", u: doc(2), f: "*" },
       { d: "24 Mar 2026", t: "The collector signs the certified-mail return card.", s: "Doc 3, page 1", u: doc(3) },
       { d: "6 Apr 2026", t: "First of nine calls to Lucia's work number.", s: "Doc 4, page 1", u: doc(4) },

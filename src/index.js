@@ -72,6 +72,13 @@ async function textFor(env, request, c) {
   if (ownerView(request, c)) mergeText(out, JSON.parse((await env.COMMENTS.get("textp:" + baseSlug(c.slug))) || "null"));
   return out;
 }
+// Settings for one Workers AI call. DeepSeek V4.1 thinks before it answers, and that hidden thinking counts against
+// max_tokens, so on a long list the visible answer was cut off; "low" keeps it short. Other models do not get the field.
+function aiOpts(model, messages, maxTokens) {
+  const o = { messages, max_tokens: maxTokens };
+  if (model.includes("deepseek")) o.reasoning_effort = "low";
+  return o;
+}
 async function aiJson(env, system, user, maxTokens) {
   const MODELS = ["@cf/meta/llama-4-scout-17b-16e-instruct", "@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/mistralai/mistral-small-3.1-24b-instruct"];
   let last = "";
@@ -691,10 +698,13 @@ const __app = {
       const notice = adviceAsked(q) ? ADVICE_NOTICE[lang] : "";
       const ex = exList.map((e, i) => "[" + (i + 1) + "] " + String(e.n || "").slice(0, 160) + ", page " + (Number(e.p) || 1) + ":\n" + String(e.t || "").slice(0, 1500)).join("\n\n");
       const messages = [
-        { role: "system", content: "You are the case-file assistant for \"" + c.data.title + "\" (" + c.data.cn + "). Answer ONLY using the CASE FILE and the DOCUMENT EXCERPTS below. Be concise, factual and neutral; quote figures and dates exactly as written. " + (ex ? "Whenever a fact comes from an excerpt, cite it right after the sentence like [2] (several: [1][3]). Prefer the excerpts over the summary when they are more specific. " : "") + "If the answer is not in the file, say so and suggest which section to check. Never invent facts, names, numbers or citations. You organize and find; you never give legal advice. If asked what someone should do, whether they will win, or what the law requires of them, say that a licensed lawyer must answer that, and point to the facts in the file that the lawyer will need. Answer in the language of the question (" + (lang === "es" ? "Spanish, using usted" : "English") + ").\n\n=== CASE FILE ===\n" + caseCorpus(c.data) + (ex ? "\n\n=== DOCUMENT EXCERPTS ===\n" + ex : "") },
+        { role: "system", content: "You are the case-file assistant for \"" + c.data.title + "\" (" + c.data.cn + "). Answer ONLY using the CASE FILE and the DOCUMENT EXCERPTS below. Be concise, factual and neutral; quote figures and dates exactly as written. Keep the answer short: about 150 words, unless the question asks for a list. Every date you give must say which event it belongs to (for example dated, postmarked, received, sent, served, filed), exactly as the file says; never move a date from one event to another. Never count days or work out a deadline yourself; give the deadline only in the words of the paper. Give a phone number or street address only when the question asks for that person's contact details. " + (ex ? "Whenever a fact comes from an excerpt, cite it right after the sentence like [2] (several: [1][3]). Prefer the excerpts over the summary when they are more specific. " : "") + "If the answer is not in the file, say so and suggest which section to check. Never invent facts, names, numbers or citations. You organize and find; you never give legal advice. If asked what someone should do, whether they will win, or what the law requires of them, say that a licensed lawyer must answer that, and point to the facts in the file that the lawyer will need. Answer in the language of the question (" + (lang === "es" ? "Spanish, using usted" : "English") + ").\n\n=== CASE FILE ===\n" + caseCorpus(c.data) + (ex ? "\n\n=== DOCUMENT EXCERPTS ===\n" + ex : "") },
         { role: "user", content: q },
       ];
       const MODELS = [
+        // Best of the Workers AI models on the vals.ai Access to Justice board (Nov 2026); tested on the sample case (docs/ai-models.md).
+        // It needs the Workers Paid plan: on a free account it fails and the next model answers.
+        "@cf/deepseek-ai/deepseek-v4.1-flash-1017",
         "@cf/meta/llama-4-scout-17b-16e-instruct",
         "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
         "@cf/meta/llama-3.1-8b-instruct-fast",
@@ -705,7 +715,7 @@ const __app = {
       let lastErr = "";
       for (const m of MODELS) {
         try {
-          const out = await env.AI.run(m, { messages, max_tokens: 700 });
+          const out = await env.AI.run(m, aiOpts(m, messages, 2500)); // room to finish: the prompt asks for ~150 words (a list can be longer, and DeepSeek's hidden thinking counts too); the cap only stops runaways
           const ans = out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content));
           if (ans && String(ans).trim()) {
             // Only pages the AI was given may be cited; an answer with no cited page is flagged for the reader.
@@ -738,11 +748,11 @@ const __app = {
         { role: "system", content: "You are a Florida litigation paralegal drafting formal discovery responses for the client in \"" + c.data.title + "\" (" + c.data.cn + "). Rewrite the client's ROUGH ANSWER to the REQUEST into a clean, professional, legally-phrased response. " + guide + " Use ONLY the facts contained in the client's rough answer — do NOT invent facts, dates, dollar amounts, names, or documents, and do not add legal conclusions the client did not state. Keep it concise. This is a draft for the supervising lawyer to review; never add advice. Output ONLY the response text, with no preamble, labels, or quotation marks." },
         { role: "user", content: "REQUEST:\n" + q + "\n\nROUGH ANSWER (client's own words):\n" + draft + "\n\nRewrite the rough answer as a formal response:" },
       ];
-      const RWMODELS = ["@cf/meta/llama-4-scout-17b-16e-instruct", "@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/mistralai/mistral-small-3.1-24b-instruct", "@cf/meta/llama-3-8b-instruct"];
+      const RWMODELS = ["@cf/deepseek-ai/deepseek-v4.1-flash-1017", "@cf/meta/llama-4-scout-17b-16e-instruct", "@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/mistralai/mistral-small-3.1-24b-instruct", "@cf/meta/llama-3-8b-instruct"];
       let lastErr = "";
       for (const m of RWMODELS) {
         try {
-          const out = await env.AI.run(m, { messages, max_tokens: 600 });
+          const out = await env.AI.run(m, aiOpts(m, messages, 600));
           const ans = out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content));
           if (ans && String(ans).trim()) return json({ ok: true, answer: String(ans).trim() });
         } catch (e) { lastErr = (e && e.message) || String(e); }
